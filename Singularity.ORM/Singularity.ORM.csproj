@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{003597CC-8C4B-45BC-9AF1-A9459B9057C8}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Singularity.ORM</RootNamespace>
+    <AssemblyName>Singularity.ORM</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Devart.Data, Version=5.0.1384.0, Culture=neutral, PublicKeyToken=09af7300eec23701, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Soneta\enova365 11.2.5871\Devart.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Devart.Data.MySql, Version=8.4.592.0, Culture=neutral, PublicKeyToken=09af7300eec23701, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Soneta\enova365 11.2.5871\Devart.Data.MySql.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BusinessObject.cs" />
+    <Compile Include="BusinessObjectBase.cs" />
+    <Compile Include="Conditions\RecordCondition.cs" />
+    <Compile Include="Conditions\SQLCondition.cs" />
+    <Compile Include="EntityProvider.cs" />
+    <Compile Include="EntityTable.cs" />
+    <Compile Include="Enum\Collation.cs" />
+    <Compile Include="Enum\ConditionType.cs" />
+    <Compile Include="Enum\FieldState.cs" />
+    <Compile Include="Enum\SortOrder.cs" />
+    <Compile Include="Events\BeforeExecuteEventHandler.cs" />
+    <Compile Include="Events\CommitEventHandler.cs" />
+    <Compile Include="Exceptions\EntityValidationException.cs" />
+    <Compile Include="Exceptions\FieldNotFoundException.cs" />
+    <Compile Include="Exceptions\InvalidDatabaseStructureException.cs" />
+    <Compile Include="Interfaces.cs" />
+    <Compile Include="Map\EntityMapper.cs" />
+    <Compile Include="Map\IMapper.cs" />
+    <Compile Include="PathPropertyResolver.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ProviderCredentials.cs" />
+    <Compile Include="Reader\FindByAction.cs" />
+    <Compile Include="Reader\FindByIdAction.cs" />
+    <Compile Include="Reader\GetAllRowsAction.cs" />
+    <Compile Include="Reader\SQLActionBase.cs" />
+    <Compile Include="SQL\DbPropertyChangedEventArgs.cs" />
+    <Compile Include="SQL\SQLExtensions.cs" />
+    <Compile Include="SQL\SQLProvider.cs" />
+    <Compile Include="SQL\SQLQuery.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SQL\SQLTransaction.cs" />
+    <Compile Include="TableCollection.cs" />
+    <Compile Include="Validation\BusinessValidationAttribute.cs" />
+    <Compile Include="Validation\BusinessValidator.cs" />
+    <Compile Include="Validation\MendatoryAttribute.cs" />
+    <Compile Include="Validation\TextMaxLengthAttribute.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
