@@ -22,7 +22,7 @@ namespace Singularity.ORM.Reader
     {
         protected MySqlConnection Connection { get; set; }
         protected SQLprovider Provider { get; set; }
-        IEnumerable<Type> entities;
+        private   IEnumerable<Type> entities;
 
         internal SQLQuery CreateCommand()
         {
@@ -42,16 +42,13 @@ namespace Singularity.ORM.Reader
         {
             entities = SQLprovider.GetAllEntities();
             Type entity = entities.Where(en => tablename == SQLprovider.getTableName(en)).FirstOrDefault();
-            if (entity != null)
-            {
+            if (entity != null) {
                 PropertyInfo pi = entity.GetProperty(propertyname.Trim(),
                     BindingFlags.Public | BindingFlags.Instance);
-                if (pi != null)
-                {
+                if (pi != null) {
                     type = pi.PropertyType;
                     return true;
                 }
-
             }
             return false;
         }
@@ -79,32 +76,28 @@ namespace Singularity.ORM.Reader
             }
             List<Tuple<string, string>> joinedValues = new List<Tuple<string, string>>();
             List<string> joinedTables = new List<string>();
-            List<string> addedTables = new List<string>();
+            List<string> addedTables  = new List<string>();
             addedTables.Add(table);
             foreach (string s in arr2)
             {
                 Type currentType = type;
                 string currentTable = "";
-                if (s.Contains('.') && s.Split('.').Length > 1)
-                {
+                if (s.Contains('.') && s.Split('.').Length > 1) {
                     string[] fds = s.Split('.');
-                    for (int i = 0; i < fds.Length; ++i)
-                    {
+                    for (int i = 0; i < fds.Length; ++i)  {
                         currentTable = SQLprovider.getTableNameByField(currentType, fds[i], out currentType);
                         if (string.IsNullOrEmpty(currentTable)
                                 || currentTable.Equals(table))
                             continue;
-                        if (!joinedTables.Contains(currentTable))
-                        {
+                        if (!joinedTables.Contains(currentTable)) {
                             joinedTables.Add(currentTable);
-                        }
-                        joinedValues.Add(Tuple.Create(currentTable, s));
-                    }
+                       }
+                      joinedValues.Add(Tuple.Create(currentTable, s));
+                   }
                 }
             }
 
-            for (int i = 0; i < joinedTables.Count; ++i)
-            {
+            for (int i = 0; i < joinedTables.Count; ++i) {
                 string joinedTableName = joinedTables[i];
                 string _key = "";
                 string _table = "";
@@ -112,25 +105,23 @@ namespace Singularity.ORM.Reader
                 var fields = tuple.Item2.Split('.');
                 Type _type = null;
                 bool foundKey = false;
-                foreach (string _field in fields)
-                {
-                    foreach (string _tablename in addedTables)
-                    {
+
+                 foreach (string _field in fields)  {
+                    foreach (string _tablename in addedTables) {
                         bool check = IsProperly(_tablename, _field, ref _type);
-                        if (check && _type != null
+                         if (check && _type != null
                             && typeof(EntityProvider).IsAssignableFrom(_type)
-                            && SQLprovider.getTableName(_type) == joinedTableName)
-                        {
+                            && SQLprovider.getTableName(_type) == joinedTableName) {
                             _table = _tablename;
                             _key = _field;
                             addedTables.Add(joinedTableName);
                             foundKey = true;
-                            break;
+                              break;
                         }
-                    }
-                    if (foundKey)
-                        break;
-                    else continue;
+                   }
+                   if (foundKey)
+                          break;
+                   else  continue;
                 }
                 query = query.Replace("WHERE", String.Format("JOIN {0} ON {1}.{2} = {0}.Id",
                         joinedTableName,
@@ -138,18 +129,7 @@ namespace Singularity.ORM.Reader
                         _key));
                 query = query.Insert(query.IndexOf("{2}"), "WHERE ");
             }
-
-            //joinedTables.ToList().ForEach(delegate(string joinedTableName)
-            //{
-            //    var tuple = joinedValues.Where(val => val.Item1 == joinedTableName).LastOrDefault();
-            //    // var key = tuple.Item2.Split('.')[tuple.Item2.Split('.').Length - 2];
-            //    var key = tuple.Item2.Split('.')[0];
-            //    query = query.Replace("WHERE", String.Format("JOIN {0} ON {1}.{2} = {0}.Id",
-            //        joinedTableName,
-            //        table,
-            //        key));
-            //    query = query.Insert(query.IndexOf("{2}"), "WHERE ");
-            //});
+            
 
             joinedValues.ForEach(delegate(Tuple<string, string> tuple)
             {
@@ -213,17 +193,14 @@ namespace Singularity.ORM.Reader
                 object obj = null;
                 for (int i = 0; i < reader.FieldCount; ++i)
                 {
-                    if (i == 0 && obj == null)
-                    {
+                    if (i == 0 && obj == null) {
                         obj = Activator.CreateInstance(type);
                     }
-                    if (obj != null)
-                    {
+                    if (obj != null)  {
                         string field = !char.IsNumber(reader.GetName(i)[0])
                             ? reader.GetName(i) : string.Format("_{0}", reader.GetName(i));
                         object value = null;
-                        if (reader.GetValue(i).GetType() == typeof(DBNull))
-                        {
+                        if (reader.GetValue(i).GetType() == typeof(DBNull))  {
                             if (props[i] == typeof(int))
                                 value = 0;
                             else if (props[i] == typeof(string))
@@ -232,14 +209,13 @@ namespace Singularity.ORM.Reader
                         else
                         {
                             IEntityMapper EntityMapper = null;
-                            if (props[i] == typeof(bool))
-                            {
+                            if (props[i] == typeof(bool))  {
                                 EntityMapper = new BoolMapper
                                             (Provider, reader.GetValue(i));
                                 value = EntityMapper.Map();
                             }
-                            else if (props[i].IsEnum && reader.GetValue(i).GetType() == typeof(string))
-                            {
+                            else if (props[i].IsEnum && reader.GetValue(i).GetType() == typeof(string))  {
+
                                 var genericType = typeof(EnumMapper<>).MakeGenericType(props[i]);
                                 EntityMapper = (IEntityMapper)Activator.CreateInstance(genericType,
                                 new object[] {
@@ -249,15 +225,15 @@ namespace Singularity.ORM.Reader
                                 value = EntityMapper.Map();
                             }
                             else if (typeof(INotifyPropertyChanged).IsAssignableFrom(props[i])
-                                  && typeof(IBaseRecord).IsAssignableFrom(props[i]))
-                            {
+                                  && typeof(IBaseRecord).IsAssignableFrom(props[i])) {
+
                                 EntityMapper = new BusinessMapper
                                            (Provider, reader.GetValue(i), props[i]);
                                 value = EntityMapper.Map();
                             }
                             else if (props[i] == typeof(string) &&
-                                    reader.GetValue(i).GetType() == typeof(byte[]))
-                            {
+                                    reader.GetValue(i).GetType() == typeof(byte[])) {
+
                                 EntityMapper = new ByteStringMapper
                                                (Provider, reader.GetValue(i));
                                 value = EntityMapper.Map();
