@@ -15,7 +15,7 @@ SQLprovider Context = new SQLprovider(new ProviderCredentials() {
               Server = "127.0.0.1",
               Port = 3306,
               User = "root",
-              Password = "enova",
+              Password = "",
               Database = "testORM",
               Collation = Singularity.ORM.Enum.Collation.UTF8            
             });
