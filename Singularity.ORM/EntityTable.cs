@@ -51,7 +51,7 @@ namespace Singularity.ORM
             condition &= new RecordCondition.Limit(1);
             EntityProvider result = ((EntityProvider)this.Context.GetRows[typeof(T), condition].FirstOrDefault());
             if (result != null)
-                 SetTRansaction(result);
+                SetTRansaction(result);
             return (T)result;
         }
 
@@ -77,10 +77,11 @@ namespace Singularity.ORM
             return result.Cast<T>();
         }
 
-        protected virtual void Add<T>(EntityProvider row) where T : EntityProvider
+        protected virtual void Add<T>(EntityProvider row) where T : EntityProvider, new()
         {
             this.Context.AddNew((T)row, this.Transaction);
         }
+
 
         private void SetTRansaction(EntityProvider obj)
         {

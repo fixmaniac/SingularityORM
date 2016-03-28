@@ -324,6 +324,19 @@ namespace Singularity.ORM.SQL
             return fields.ToArray();
         }
 
+        public static IEnumerable<Type> GetAllEntities()
+        {
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (Assembly asm in assemblies)
+            {
+                foreach (Type t in asm.GetTypes().Where
+                (type => type.IsSubclassOf(typeof(EntityProvider))))
+                {
+                    yield return t;
+                }
+            }
+        }
+
 
         #region Transactions
 

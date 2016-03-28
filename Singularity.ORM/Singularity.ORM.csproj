@@ -75,13 +75,13 @@
     <Compile Include="Reader\FindByIdAction.cs" />
     <Compile Include="Reader\GetAllRowsAction.cs" />
     <Compile Include="Reader\SQLActionBase.cs" />
-    <Compile Include="SQL\DbPropertyChangedEventArgs.cs" />
-    <Compile Include="SQL\SQLExtensions.cs" />
-    <Compile Include="SQL\SQLProvider.cs" />
-    <Compile Include="SQL\SQLQuery.cs">
+    <Compile Include="SQL_\DbPropertyChangedEventArgs.cs" />
+    <Compile Include="SQL_\SQLExtensions.cs" />
+    <Compile Include="SQL_\SQLProvider.cs" />
+    <Compile Include="SQL_\SQLQuery.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="SQL\SQLTransaction.cs" />
+    <Compile Include="SQL_\SQLTransaction.cs" />
     <Compile Include="TableCollection.cs" />
     <Compile Include="Validation\BusinessValidationAttribute.cs" />
     <Compile Include="Validation\BusinessValidator.cs" />

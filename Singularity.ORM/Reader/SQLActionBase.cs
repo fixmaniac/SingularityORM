@@ -14,14 +14,15 @@ using Singularity.ORM.Conditions;
 namespace Singularity.ORM.Reader
 {
     #region SQL Actions
-        /// <summary>
-        ///  
-        /// </summary>
+    /// <summary>
+    ///  
+    /// </summary>
     [DataObject]
     public abstract class SQLActionBase
     {
         protected MySqlConnection Connection { get; set; }
         protected SQLprovider Provider { get; set; }
+        IEnumerable<Type> entities;
 
         internal SQLQuery CreateCommand()
         {
@@ -31,6 +32,28 @@ namespace Singularity.ORM.Reader
         protected T Result<T>(Type type, SQLCondition cond)
         {
             return (T)get(typeof(T), type, cond);
+        }
+        public bool IsProperly(string tablename, string propertyname)
+        {
+            Type type = null;
+            return IsProperly(tablename, propertyname, ref type);
+        }
+        public bool IsProperly(string tablename, string propertyname, ref Type type)
+        {
+            entities = SQLprovider.GetAllEntities();
+            Type entity = entities.Where(en => tablename == SQLprovider.getTableName(en)).FirstOrDefault();
+            if (entity != null)
+            {
+                PropertyInfo pi = entity.GetProperty(propertyname.Trim(),
+                    BindingFlags.Public | BindingFlags.Instance);
+                if (pi != null)
+                {
+                    type = pi.PropertyType;
+                    return true;
+                }
+
+            }
+            return false;
         }
         /// <summary>
         /// Build join condition responsible for translation nested conditions
@@ -45,7 +68,7 @@ namespace Singularity.ORM.Reader
 
             string query = SQLprovider.read;
             string[] conds = new string[] { "AND", "OR" };
-            string[] conds1 = new string[] { "=", "<>","like", "not like", "is null", "is not null" };
+            string[] conds1 = new string[] { "=", "<>", "like", "not like", "is null", "is not null" };
             string[] arr = condition.Split(conds,
                         StringSplitOptions.RemoveEmptyEntries);
             List<string> arr2 = new List<string>();
@@ -56,6 +79,8 @@ namespace Singularity.ORM.Reader
             }
             List<Tuple<string, string>> joinedValues = new List<Tuple<string, string>>();
             List<string> joinedTables = new List<string>();
+            List<string> addedTables = new List<string>();
+            addedTables.Add(table);
             foreach (string s in arr2)
             {
                 Type currentType = type;
@@ -77,22 +102,63 @@ namespace Singularity.ORM.Reader
                     }
                 }
             }
-            joinedTables.ToList().ForEach(delegate(string joinedTableName)
+
+            for (int i = 0; i < joinedTables.Count; ++i)
             {
-                var tuple = joinedValues.Where(val => val.Item1 == joinedTableName).FirstOrDefault();
-                var key = tuple.Item2.Split('.')[tuple.Item2.Split('.').Length - 2];
+                string joinedTableName = joinedTables[i];
+                string _key = "";
+                string _table = "";
+                var tuple = joinedValues.Where(val => val.Item1 == joinedTableName).LastOrDefault();
+                var fields = tuple.Item2.Split('.');
+                Type _type = null;
+                bool foundKey = false;
+                foreach (string _field in fields)
+                {
+                    foreach (string _tablename in addedTables)
+                    {
+                        bool check = IsProperly(_tablename, _field, ref _type);
+                        if (check && _type != null
+                            && typeof(EntityProvider).IsAssignableFrom(_type)
+                            && SQLprovider.getTableName(_type) == joinedTableName)
+                        {
+                            _table = _tablename;
+                            _key = _field;
+                            addedTables.Add(joinedTableName);
+                            foundKey = true;
+                            break;
+                        }
+                    }
+                    if (foundKey)
+                        break;
+                    else continue;
+                }
                 query = query.Replace("WHERE", String.Format("JOIN {0} ON {1}.{2} = {0}.Id",
-                    joinedTableName,
-                    table,
-                    key));
+                        joinedTableName,
+                        _table,
+                        _key));
                 query = query.Insert(query.IndexOf("{2}"), "WHERE ");
-            });
+            }
+
+            //joinedTables.ToList().ForEach(delegate(string joinedTableName)
+            //{
+            //    var tuple = joinedValues.Where(val => val.Item1 == joinedTableName).LastOrDefault();
+            //    // var key = tuple.Item2.Split('.')[tuple.Item2.Split('.').Length - 2];
+            //    var key = tuple.Item2.Split('.')[0];
+            //    query = query.Replace("WHERE", String.Format("JOIN {0} ON {1}.{2} = {0}.Id",
+            //        joinedTableName,
+            //        table,
+            //        key));
+            //    query = query.Insert(query.IndexOf("{2}"), "WHERE ");
+            //});
 
             joinedValues.ForEach(delegate(Tuple<string, string> tuple)
             {
                 if (!tuple.Item2.Contains('.'))
                     return;
                 string[] items = tuple.Item2.Split('.');
+                bool isProperly = IsProperly(tuple.Item1, items[items.Length - 1]);
+                if (!isProperly)
+                    return;
                 condition = condition.Replace
                     (tuple.Item2, String.Format(" {0}.{1} ", tuple.Item1, items[items.Length - 1]));
 
@@ -116,7 +182,7 @@ namespace Singularity.ORM.Reader
                 this.Connection.Open();
             SQLQuery cmd = this.CreateCommand();
             string tableName = SQLprovider.getTableName(type);
-            string[] fields  = SQLprovider.getFieldsNames(type);
+            string[] fields = SQLprovider.getFieldsNames(type);
             if (cond.Condition.Contains('.'))
             {
                 string joinCondition = string.Empty;
@@ -132,7 +198,7 @@ namespace Singularity.ORM.Reader
                     String.Join(",", fields),
                     tableName,
                     cond.Condition);
-            }            
+            }
             cmd.Connection = this.Connection;
             cmd.BeforeExecute += new BeforeExecuteEventHandler(cmd_BeforeExecute);
             object result = cmd.ExecuteReader();
