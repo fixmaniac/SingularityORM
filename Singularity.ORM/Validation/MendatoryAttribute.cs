@@ -20,6 +20,10 @@ namespace Singularity.ORM.Validation
                 && value.GetType() == typeof(String)
                 && ((String)value) == String.Empty)
                 return new ValidationResult(ErrorMessage);
+            else if (value != null
+                && value.GetType().IsEnum
+                && value.ToString().Equals("0"))
+                return new ValidationResult(ErrorMessage);
             else if (value == null)
             {
                 return new ValidationResult(ErrorMessage);
