@@ -35,7 +35,7 @@ SQLprovider Context = new SQLprovider(new ProviderCredentials() {
         ServerAddress="localhost"  
         PortNumber="3306"
         UserName ="root"
-        Password ="enova"
+        Password =""
         Database ="testORM"
         Collation = "UTF8"
         />
