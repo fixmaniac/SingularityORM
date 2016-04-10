@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Configuration;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -67,9 +68,32 @@ namespace Singularity.ORM.SQL
         #endregion
 
         #region (..) ctor
-        private SQLprovider()
+        public SQLprovider()
         {
-            throw new ArgumentNullException("ProviderCredentials", "Brakujący parametr ");
+            // Read Config
+
+            var config = (SingularityProviderSection)
+                 ConfigurationManager.GetSection("SingularityProvider");
+            if (config == null)
+                throw new ArgumentNullException("SingularityProvider", "Brakujący parametr ");
+            ProviderCredentials __credentials = new ProviderCredentials()
+            {
+                Server    = config.ServerAddress,
+                Port      = config.PortNumber,
+                User      = config.UserName,
+                Password  = config.Password,
+                Database  = config.Database,
+                Collation = config.Collation
+            };
+
+            // Connection 
+
+            this.Credentials = __credentials;
+            Connect(__credentials);
+
+            // Handle Access to data methods
+
+            RepositoryHandle();
         }
         public SQLprovider(ProviderCredentials credentials)
         {
@@ -80,6 +104,12 @@ namespace Singularity.ORM.SQL
 
             // Handle Access to data methods
 
+            RepositoryHandle();
+
+        }
+
+        internal void RepositoryHandle()
+        {
             actionGetAllRows = new GelAllRowsAction(this);
             actionFindById = new FindByIdAction(this);
             actionFindBy = new FindByAction(this);
@@ -92,7 +122,6 @@ namespace Singularity.ORM.SQL
             conn.ConnectionString = credentials.ConnectionString;
             conn.LocalFailover = true;
             conn.ConnectionLost += new ConnectionLostEventHandler(conn_ConnectionLost);
-            //conn.Open();
             this.Connection = conn;
         }
         #endregion
@@ -336,7 +365,6 @@ namespace Singularity.ORM.SQL
                 }
             }
         }
-
 
         #region Transactions
 
