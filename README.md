@@ -10,6 +10,8 @@ Singularity.ORM is currently in the testing phase, and no giving any warranty.
 #How to use
 
 ### 1. Connection
+
+##### Directly in source code
 ```c#
 SQLprovider Context = new SQLprovider(new ProviderCredentials() { 
               Server = "127.0.0.1",
@@ -19,6 +21,28 @@ SQLprovider Context = new SQLprovider(new ProviderCredentials() {
               Database = "testORM",
               Collation = Singularity.ORM.Enum.Collation.UTF8            
             });
+```
+
+##### Using sections in App.config.xml / Web.config.xml
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <configSections>
+    <section name="SingularityProvider" requirePermission="false"
+             type="Singularity.ORM.SingularityProviderSection,Singularity.ORM"/>
+  </configSections>
+  <SingularityProvider 
+        ServerAddress="localhost"  
+        PortNumber="3306"
+        UserName ="root"
+        Password ="enova"
+        Database ="testORM"
+        Collation = "UTF8"
+        />
+    <startup> 
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.5" />
+    </startup> 
+</configuration>
 ```
 ### 2. Create new instance of an employee object
 
