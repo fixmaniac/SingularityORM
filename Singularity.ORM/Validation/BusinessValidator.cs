@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Singularity.ORM.Enum;
 
 namespace Singularity.ORM.Validation
 {
@@ -26,6 +27,10 @@ namespace Singularity.ORM.Validation
 
         public static IEnumerable<string> Validate(object o)
         {
+            if (!typeof(EntityProvider).IsAssignableFrom(o.GetType())
+                || (FieldState)((EntityProvider)o)["State"] == FieldState.Deleted)
+                yield break;
+
             Type type = o.GetType();
             PropertyInfo[] properties = o.GetType().GetProperties();
             foreach (var propertyInfo in properties)
