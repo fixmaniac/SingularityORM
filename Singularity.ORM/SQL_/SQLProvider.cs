@@ -329,7 +329,7 @@ namespace Singularity.ORM.SQL
             List<string> arr = new List<string>();
             foreach (PropertyInfo pi in props)
             {
-                if (!reserved.Contains(pi.Name))
+                if (!reserved.Contains(pi.Name) && pi.CanWrite)
                     arr.Add(String.Format("`{0}`", pi.Name));
             }
             return arr.ToArray();
