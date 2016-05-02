@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,13 +25,13 @@ namespace Singularity.ORM.Conditions
                     cond = ((IBaseRecord)cond).Id;
                 switch (type)
                 {
-                    case ConditionType.Equal: _result    = cond == null 
-                                                            ? String.Format("{0} is null", field) 
-                                                            : String.Format("{0} = '{1}'", field, cond);
+                    case ConditionType.Equal: _result    =  cond == null 
+                                                                ? String.Format("{0} is null", field) 
+                                                                : String.Format("{0} = '{1}'", field, cond);
                         break;
-                    case ConditionType.NotEqual: _result = cond == null
-                                                           ? String.Format("{0} is not null", field)   
-                                                           : String.Format("{0} <> '{1}'", field, cond);
+                    case ConditionType.NotEqual: _result =  cond == null
+                                                               ? String.Format("{0} is not null", field)   
+                                                               : String.Format("{0} <> '{1}'", field, cond);
                         break;
                     case ConditionType.Like: _result     =
                                                              String.Format("{0} like '%{1}%'", field, cond);
@@ -45,10 +46,30 @@ namespace Singularity.ORM.Conditions
                                                              String.Format("limit {0} ", cond);
                         break;
                     case ConditionType.Null: _result     =
-                                                           (bool)cond == true
-                                                            ? String.Format("{0} is null", field)
-                                                            : String.Format("{0} is not null", field);
+                                                             (bool)cond == true
+                                                                ? String.Format("{0} is null", field)
+                                                                : String.Format("{0} is not null", field);
                         break;
+                    case ConditionType.In:
+                                                    {
+                                                        object[] args = (object[])cond;
+                                                        object[] flattened = args
+                                                                .Select(a => a is object[] ? (object[])a : new object[] { a })
+                                                                .SelectMany(a => a)
+                                                                .ToArray();
+                                                        string[] arr1 = ((IEnumerable)flattened[0]).Cast<object>()
+                                                                .Select(x => String.Format("'{0}'", x.ToString()))
+                                                                .ToArray();
+                                                        string[] arr2 = ((IEnumerable)args).Cast<object>()
+                                                                .Select(x => String.Format("'{0}'", x.ToString()))
+                                                                  .ToArray();
+
+                                                        _result = String.Format("{0} in ({1})", field, String.Join
+                                                                  (",", args.Length == 1 &&
+                                                                  typeof(Array).IsAssignableFrom(args[0].GetType())
+                                                                    ? arr1 : arr2));
+                                                        break;
+                                                    }
                 }
                 return _result;
             };
