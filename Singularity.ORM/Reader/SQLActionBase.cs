@@ -64,8 +64,21 @@ namespace Singularity.ORM.Reader
         {
 
             string query = SQLprovider.read;
-            string[] conds = new string[] { "AND", "OR" };
-            string[] conds1 = new string[] { "=", "<>", "like", "not like", "is null", "is not null" };
+            string[] conds = new string[] 
+                                        { 
+                                            "AND", 
+                                            "OR" 
+                                        };
+            string[] conds1 = new string[] 
+                                        { 
+                                            "=", 
+                                            "<>", 
+                                            "like", 
+                                            "not like", 
+                                            "is null", 
+                                            "is not null", 
+                                            "in" 
+                                        };
             string[] arr = condition.Split(conds,
                         StringSplitOptions.RemoveEmptyEntries);
             List<string> arr2 = new List<string>();
