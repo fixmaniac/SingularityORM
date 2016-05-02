@@ -191,11 +191,21 @@ namespace Singularity.ORM.SQL
         }
         public void Rollback()
         {
+            if (this.Connection.State == ConnectionState.Closed)
+            {
+                this.Connection.Open();
+                IsolationLevel level = this.Transaction.IsolationLevel;
+            }
             this.Transaction.Rollback();
         }
 
         void IDisposable.Dispose()
         {
+            if (this.Connection.State == ConnectionState.Closed)
+            {
+                this.Connection.Open();
+                IsolationLevel level = this.Transaction.IsolationLevel;
+            }
             this.Transaction.Dispose();
         }
     }
