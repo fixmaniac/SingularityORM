@@ -25,32 +25,31 @@ namespace Singularity.ORM.Conditions
                     cond = ((IBaseRecord)cond).Id;
                 switch (type)
                 {
-                    case ConditionType.Equal: _result    =  cond == null 
+                    case ConditionType.Equal    : _result    =  cond == null 
                                                                 ? String.Format("{0} is null", field) 
                                                                 : String.Format("{0} = '{1}'", field, cond);
-                        break;
-                    case ConditionType.NotEqual: _result =  cond == null
-                                                               ? String.Format("{0} is not null", field)   
-                                                               : String.Format("{0} <> '{1}'", field, cond);
-                        break;
-                    case ConditionType.Like: _result     =
-                                                             String.Format("{0} like '%{1}%'", field, cond);
-                        break;
-                    case ConditionType.NotLike: _result  =
-                                                             String.Format("{0} not like '%{1}%' ", field, cond);
-                        break;
-                    case ConditionType.Sort: _result     =
-                                                             String.Format("order by Id {0} ", cond);
-                        break;
-                    case ConditionType.Limit: _result    =
-                                                             String.Format("limit {0} ", cond);
-                        break;
-                    case ConditionType.Null: _result     =
+                                                                    break;
+                    case ConditionType.NotEqual : _result     =  cond == null
+                                                                ? String.Format("{0} is not null", field)   
+                                                                : String.Format("{0} <> '{1}'", 
+                                                                                    field, cond);
+                                                                    break;
+                    case ConditionType.Like     : _result     =   String.Format("{0} like '%{1}%'", 
+                                                                                    field, cond);
+                                                                   break;
+                    case ConditionType.NotLike  : _result     =   String.Format("{0} not like '%{1}%' ", 
+                                                                                   field, cond);
+                                                                   break;
+                    case ConditionType.Sort     : _result     =   String.Format("order by Id {0} ", cond);
+                                                                   break;
+                    case ConditionType.Limit    : _result     =   String.Format("limit {0} ", cond);
+                                                                   break;
+                    case ConditionType.Null     : _result     =
                                                              (bool)cond == true
                                                                 ? String.Format("{0} is null", field)
                                                                 : String.Format("{0} is not null", field);
-                        break;
-                    case ConditionType.In:
+                                                                   break;
+                    case ConditionType.In       :
                                                     {
                                                         object[] args = (object[])cond;
                                                         object[] flattened = args
@@ -68,7 +67,7 @@ namespace Singularity.ORM.Conditions
                                                                   (",", args.Length == 1 &&
                                                                   typeof(Array).IsAssignableFrom(args[0].GetType())
                                                                     ? arr1 : arr2));
-                                                        break;
+                                                                    break;
                                                     }
                 }
                 return _result;
