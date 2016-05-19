@@ -16,6 +16,8 @@ namespace CodeGenerator.Schema
         public string Description;
         [XmlAttribute("mendatory")]
         public bool Mendatory;
+        [XmlAttribute("unique")]
+        public bool Unique;
 
         public Entity Entity
         {
