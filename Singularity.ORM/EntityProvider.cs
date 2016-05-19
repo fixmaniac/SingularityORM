@@ -26,6 +26,31 @@ namespace Singularity.ORM
                 customFieldValues[fieldName] = value;
             }
         }
+
+        public virtual ISqlTransaction Transaction
+        {
+            get
+            {
+                return (ISqlTransaction)this["CurrentTransaction"];
+            }
+            set
+            {
+                this["CurrentTransaction"] = value;
+            }
+        }
+
+        public virtual FieldState State
+        {
+            get
+            {
+                return this["State"] == null
+                    ? FieldState.Unchanged : (FieldState)this["State"];
+            }
+            set
+            {
+                this["State"] = value;
+            }
+        }
     }
 
     class BusinessRow
