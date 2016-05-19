@@ -353,6 +353,7 @@ namespace Singularity.ORM.SQL
             return fields.ToArray();
         }
 
+        [Obsolete]
         public static IEnumerable<Type> GetAllEntities()
         {
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
