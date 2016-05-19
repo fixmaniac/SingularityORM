@@ -7,16 +7,20 @@ namespace CodeGenerator.Schema
     [XmlRoot("entity", Namespace = "http://singularity-orm/schema/entity_struct.xsd")]
     public class Entity : WithName
     {
-        private static XmlSerializer serializer = new XmlSerializer(typeof (Entity));
+        private static XmlSerializer serializer = new XmlSerializer(typeof(Entity));
         [XmlAttribute("namespace")]
         public string Namespace;
         [XmlAttribute("tablename")]
         public string TableName;
+        [XmlAttribute("repository")]
+        public string Repository;
         [XmlElement("using")]
         public string[] Usings;
+        private Key[] keys;
+        private Field[] fields;
         private Enumerator[] enums;
-        private Field[] fields;       
-        
+
+
 
         [XmlElement("field")]
         public Field[] Fields
@@ -41,6 +45,19 @@ namespace CodeGenerator.Schema
             set
             {
                 this.enums = value;
+            }
+        }
+
+        [XmlElement("key")]
+        public Key[] Keys
+        {
+            get
+            {
+                return this.keys != null ? this.keys : new Key[0];
+            }
+            set
+            {
+                this.keys = value;
             }
         }
 
