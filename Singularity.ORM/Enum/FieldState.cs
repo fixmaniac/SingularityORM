@@ -11,6 +11,7 @@ namespace Singularity.ORM.Enum
     /// </summary>
     public enum FieldState
     {
+        Unchanged,
         Added,
         Modified,
         Deleted
