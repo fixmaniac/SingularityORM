@@ -8,9 +8,20 @@ using System.Xml.Serialization;
 
 namespace CodeGenerator.Schema
 {
-    public class Key : WithName
+    public enum KeyType
     {
-        [XmlAttribute("relationtype")]
-        public KeyRelationType RelationType;
+        PrimaryKey,
+        ForeignKey
+    }
+    public class Key
+    {
+        [XmlAttribute("type")]
+        public KeyType Type;
+        [XmlAttribute("column")]
+        public string Column;
+        [XmlAttribute("table")]
+        public string Table;
+        [XmlAttribute("children")]
+        public string Children;
     }
 }
