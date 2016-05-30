@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\Singularity.ORM.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -42,6 +43,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -50,11 +52,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes.cs" />
     <Compile Include="BusinessObject.cs" />
     <Compile Include="BusinessObjectBase.cs" />
     <Compile Include="Conditions\RecordCondition.cs" />
     <Compile Include="Conditions\SQLCondition.cs" />
     <Compile Include="EntityProvider.cs" />
+    <Compile Include="EntityRepository.cs" />
     <Compile Include="EntityTable.cs" />
     <Compile Include="Enum\Collation.cs" />
     <Compile Include="Enum\ConditionType.cs" />
@@ -70,11 +74,12 @@
     <Compile Include="Map\IMapper.cs" />
     <Compile Include="PathPropertyResolver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProviderCredentials.cs" />
+    <Compile Include="Config\ProviderCredentials.cs" />
     <Compile Include="Reader\FindByAction.cs" />
     <Compile Include="Reader\FindByIdAction.cs" />
     <Compile Include="Reader\GetAllRowsAction.cs" />
     <Compile Include="Reader\SQLActionBase.cs" />
+    <Compile Include="Config\SingularityProviderSection.cs" />
     <Compile Include="SQL_\DbPropertyChangedEventArgs.cs" />
     <Compile Include="SQL_\SQLExtensions.cs" />
     <Compile Include="SQL_\SQLProvider.cs" />

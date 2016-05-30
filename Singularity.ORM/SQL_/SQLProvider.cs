@@ -324,7 +324,7 @@ namespace Singularity.ORM.SQL
         internal static string[] getPropertiesNames(Type type)
         {
             PropertyInfo[] props = type.GetProperties
-                   (BindingFlags.Public | BindingFlags.Instance);
+                   (BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
             List<string> arr = new List<string>();
             foreach (PropertyInfo pi in props)

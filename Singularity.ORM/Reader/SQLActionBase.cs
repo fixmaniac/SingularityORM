@@ -103,7 +103,7 @@ namespace Singularity.ORM.Reader
             if (props.Count() == 0)
                 return false;
             PropertyInfo pi = props.Where(p
-                      => p.Name == propertyName).FirstOrDefault();
+                      => p.Name == propertyName.Trim()).FirstOrDefault();
             if (pi == null)
                 return false;
             ForeignKeyAttribute attr = (ForeignKeyAttribute)
@@ -203,11 +203,13 @@ namespace Singularity.ORM.Reader
                 {
                     foreach (string _tablename in addedTables)
                     {
-                        bool isKey = IsForeignKey(type, _field, ref _type, ref _tbl);
+                        //bool isKey = IsForeignKey(type, _field, ref _type, ref _tbl);   
+                        bool isKey = IsProperly(_tablename, _field, ref _type);
                         if (isKey && _type != null
                             && typeof(EntityProvider).IsAssignableFrom(_type)
-                            && _tbl == joinedTableName)
+                            && SQLprovider.getTableName(_type) == joinedTableName)
                         {
+                            //&& _tbl == joinedTableName) {
                             entities.Add(_type);
                             _table = _tablename;
                             _key = _field;
