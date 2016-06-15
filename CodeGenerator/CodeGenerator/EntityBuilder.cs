@@ -58,6 +58,9 @@ namespace CodeGenerator
 
             addPrimaryKey();
             addFields();
+            sb.AppendLine();
+            addDelegates();
+            sb.AppendLine();
 
             sb.AppendLine("     public event PropertyChangedEventHandler PropertyChanged;");
             sb.AppendLine();
@@ -66,6 +69,9 @@ namespace CodeGenerator
             sb.AppendLine("        if (PropertyChanged != null)  ");
             sb.AppendLine("        { ");
             sb.AppendLine("            PropertyChanged(this, new DbPropertyChangedEventArgs(propertyName, this)); ");
+            sb.AppendLine();
+            addDelegatesHandlers();
+            sb.AppendLine();
             sb.AppendLine("        }");
             sb.AppendLine("     }");
             sb.AppendLine("   }");
@@ -182,6 +188,30 @@ namespace CodeGenerator
                     sb.AppendLine("   [PrimaryKey]");
                 addField(field, _key != null);
 
+            });
+        }
+
+        private void addDelegatesHandlers()
+        {
+            this.entity.Fields.ToList().ForEach(delegate(Field field)
+            {
+                sb.AppendFormat("            if (propertyName.Equals(\"{0}\"))\r\n", field.Name);
+                sb.AppendLine("            {");
+                sb.AppendFormat("                \tif ({1}.{0}Changed != null)\r\n", field.Name, (object)this.entity.Name);
+                sb.AppendFormat("                \t\t  {1}.{0}Changed(({1})this);\r\n", field.Name, (object)this.entity.Name);
+                sb.AppendLine("            }");
+            });
+        }
+
+        private void addDelegates()
+        {
+            this.entity.Fields.ToList().ForEach(delegate(Field field)
+            {
+                sb.AppendFormat("   internal static EntityDelegate<{0}> {1}Changed;\r\n", (object)this.entity.Name, field.Name);
+                sb.AppendFormat("   public static void {0}ChangedHandler(EntityDelegate<{1}> value) {{\r\n", field.Name, (object)this.entity.Name);                
+                sb.AppendFormat("       \t {0}Changed = (EntityDelegate<{1}>)Delegate.Combine({0}Changed, value);\r\n", field.Name, (object)this.entity.Name);
+                sb.AppendLine("   }");
+                sb.AppendLine();
             });
         }
 
