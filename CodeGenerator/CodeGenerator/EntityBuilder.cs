@@ -19,6 +19,7 @@ namespace CodeGenerator
             {
                 yield return "Singularity.ORM";
                 yield return "Singularity.ORM.SQL";
+                yield return "Singularity.ORM.Enum";
                 yield return "Singularity.ORM.Validation";
                 yield return "Singularity.ORM.Conditions";
             }
@@ -241,6 +242,9 @@ namespace CodeGenerator
             sb.AppendLine("     }");
             sb.AppendLine("      set ");
             sb.AppendLine("      {  ");
+            sb.AppendLine("          if (this.State != FieldState.Modified &&");
+            sb.AppendLine("              this.Transaction != null)");
+            sb.AppendLine("              this.SetEdit();");
             sb.AppendFormat("           {0} = value;\r\n", field.Name.ToLower());
             sb.AppendLine("           NotifyPropertyChanged();");
             sb.AppendLine("      }");
