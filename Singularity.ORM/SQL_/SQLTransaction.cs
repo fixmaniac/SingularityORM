@@ -58,11 +58,14 @@ namespace Singularity.ORM.SQL
             {
                 string result = "";
                 BusinessObject bus = group.FirstOrDefault();
-                string   table  = SQLprovider.getTableName(bus.Type);
+                string table = SQLprovider.getTableName(bus.Type);
                 string[] fields = SQLprovider.getPropertiesNames(bus.Type);
                 object[] values = SQLprovider.getValues(bus.Row, fields).ToArray();
                 var dict = group.Where(g => !string.IsNullOrEmpty(g.PropertyName))
-                    .ToDictionary(g => g.PropertyName, g => g.Value);
+                    .ToDictionary(
+                    g => g.PropertyName,
+                    g => g.Value is string
+                        && ((string)g.Value).Contains("'") ? ((string)g.Value).Replace("'", "''") : g.Value);
                 if (bus.State == FieldState.Modified
                                  && dict.Count == 0)
                     return;
@@ -73,7 +76,7 @@ namespace Singularity.ORM.SQL
                                    table,
                                    String.Join(",", fields),
                                    String.Join(",", values.ToList().ConvertAll
-                                     (v => String.Format("'{0}'", v)).ToArray()));                       
+                                     (v => String.Format("'{0}'", v)).ToArray()));
                         break;
                     case FieldState.Modified: result = SQLprovider.update;
                         result = String.Format(result,
@@ -131,9 +134,11 @@ namespace Singularity.ORM.SQL
             BusinessObject bus = group.FirstOrDefault();
             KeyValuePair<string, object>[] kvp = group.
                  Where(p => !String.IsNullOrEmpty(p.PropertyName)).ToList().ConvertAll
-                   (p => new KeyValuePair<string, object>(p.PropertyName, p.Value)).ToArray();
+                 (p => new KeyValuePair<string, object>(p.PropertyName,
+                     p.Value is string && ((string)p.Value).Contains("'")
+                     ? ((string)p.Value).Replace("'", "''") : p.Value)).ToArray();
 
-            string   table  = SQLprovider.getTableName(bus.Type);
+            string table = SQLprovider.getTableName(bus.Type);
             string[] fields = SQLprovider.getPropertiesNames(bus.Type);
             object[] values = SQLprovider.getValues(bus.Row, fields).ToArray();
             string result = "";
@@ -144,7 +149,7 @@ namespace Singularity.ORM.SQL
                                table,
                                String.Join(",", fields),
                                String.Join(",", values.ToList().ConvertAll
-                                   (v => String.Format("'{0}'", v)).ToArray()));                   
+                                   (v => String.Format("'{0}'", v)).ToArray()));
                     break;
                 case FieldState.Modified: result = SQLprovider.update;
                     result = String.Format(result,
@@ -187,7 +192,7 @@ namespace Singularity.ORM.SQL
 
         void cmd_BeforeExecute(object sender, SqlQueryEventArgs e)
         {
-           
+
         }
         public void Rollback()
         {

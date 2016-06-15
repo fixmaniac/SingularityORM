@@ -28,6 +28,8 @@ namespace Singularity.ORM.Conditions
                         cond = (bool)cond == true ? 1 : 0;
                     else if (typeof(IBaseRecord).IsAssignableFrom(cond.GetType()))
                         cond = ((IBaseRecord)cond).Id;
+                    else if (cond.GetType() == typeof(string) && ((string)cond).Contains("'"))
+                        cond = ((string)cond).Replace("'", "''");
                 }
                 switch (type)
                 {
@@ -64,10 +66,10 @@ namespace Singularity.ORM.Conditions
                                   .SelectMany(a => a)
                                   .ToArray();
                             string[] arr1 = ((IEnumerable)flattened[0]).Cast<object>()
-                                 .Select(x => String.Format("'{0}'", x.ToString()))
+                                .Select(x => String.Format("'{0}'", x.ToString().Contains("'") ? x.ToString().Replace("'", "''") : x.ToString()))
                                  .ToArray();
                             string[] arr2 = ((IEnumerable)args).Cast<object>()
-                                .Select(x => String.Format("'{0}'", x.ToString()))
+                                .Select(x => String.Format("'{0}'", x.ToString().Contains("'") ? x.ToString().Replace("'", "''") : x.ToString()))
                                 .ToArray();
 
                             _result = String.Format("{0} in ({1})", field, String.Join

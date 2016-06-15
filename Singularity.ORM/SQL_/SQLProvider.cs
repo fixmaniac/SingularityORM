@@ -78,11 +78,11 @@ namespace Singularity.ORM.SQL
                 throw new ArgumentNullException("SingularityProvider", "Brakujący parametr ");
             ProviderCredentials __credentials = new ProviderCredentials()
             {
-                Server    = config.ServerAddress,
-                Port      = config.PortNumber,
-                User      = config.UserName,
-                Password  = config.Password,
-                Database  = config.Database,
+                Server = config.ServerAddress,
+                Port = config.PortNumber,
+                User = config.UserName,
+                Password = config.Password,
+                Database = config.Database,
                 Collation = config.Collation
             };
 
@@ -249,6 +249,9 @@ namespace Singularity.ORM.SQL
             {
                 if (pi.GetValue(obj) == null)
                     return null;
+                else if (pi.GetValue(obj).GetType() == typeof(string)
+                        && ((string)pi.GetValue(obj)).Contains("'"))
+                    return ((string)pi.GetValue(obj)).Replace("'", "''");
                 else if (pi.GetValue(obj).GetType() == typeof(bool))
                     return (bool)pi.GetValue(obj) == true ? 1 : 0;
                 else if (pi.GetValue(obj).GetType().IsEnum)
@@ -317,14 +320,15 @@ namespace Singularity.ORM.SQL
         {
             for (int i = 0; i < fields.Length; i++)
             {
-                yield return getValueBy(row, fields[i].Replace("`", ""));
+                yield return getValueBy(row, fields[i].
+                    Replace("`", ""));
             }
         }
 
         internal static string[] getPropertiesNames(Type type)
         {
             PropertyInfo[] props = type.GetProperties
-                   (BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                   (BindingFlags.Public | BindingFlags.Instance);
 
             List<string> arr = new List<string>();
             foreach (PropertyInfo pi in props)
