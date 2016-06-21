@@ -26,7 +26,7 @@ namespace Singularity.ORM
                 customFieldValues[fieldName] = value;
             }
         }
-
+        [Browsable(false)]
         public virtual ISqlTransaction Transaction
         {
             get
@@ -38,7 +38,7 @@ namespace Singularity.ORM
                 this["CurrentTransaction"] = value;
             }
         }
-
+        [Browsable(false)]
         public virtual FieldState State
         {
             get

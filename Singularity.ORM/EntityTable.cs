@@ -47,6 +47,10 @@ namespace Singularity.ORM
 
         protected virtual T GetFirst<T>(SQLCondition condition) where T : EntityProvider
         {
+            if (condition == SQLCondition.Empty)
+            {
+                condition &= new RecordCondition.NotEqual("Id", 0);
+            }
             condition &= new RecordCondition.Sort(SortOrder.ASC);
             condition &= new RecordCondition.Limit(1);
             EntityProvider result = ((EntityProvider)this.Context.GetRows[typeof(T), condition].FirstOrDefault());
@@ -57,6 +61,10 @@ namespace Singularity.ORM
 
         protected virtual T GetLast<T>(SQLCondition condition) where T : EntityProvider
         {
+            if (condition == SQLCondition.Empty)
+            {
+                condition &= new RecordCondition.NotEqual("Id", 0);
+            }
             condition &= new RecordCondition.Sort(SortOrder.DESC);
             condition &= new RecordCondition.Limit(1);
             EntityProvider result = ((EntityProvider)this.Context.GetRows[typeof(T), condition].FirstOrDefault());

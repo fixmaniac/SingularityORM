@@ -25,7 +25,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\..\..\..\..\dll\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -57,6 +57,8 @@
     <Compile Include="BusinessObjectBase.cs" />
     <Compile Include="Conditions\RecordCondition.cs" />
     <Compile Include="Conditions\SQLCondition.cs" />
+    <Compile Include="EntityDelegate.cs" />
+    <Compile Include="EntityKey.cs" />
     <Compile Include="EntityProvider.cs" />
     <Compile Include="EntityRepository.cs" />
     <Compile Include="EntityTable.cs" />

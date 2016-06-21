@@ -62,10 +62,12 @@ namespace Singularity.ORM.SQL
                 string[] fields = SQLprovider.getPropertiesNames(bus.Type);
                 object[] values = SQLprovider.getValues(bus.Row, fields).ToArray();
                 var dict = group.Where(g => !string.IsNullOrEmpty(g.PropertyName))
+                    .GroupBy(p => p.PropertyName)
+                    .Select(p => p.LastOrDefault())
                     .ToDictionary(
                     g => g.PropertyName,
                     g => g.Value is string
-                        && ((string)g.Value).Contains("'") ? ((string)g.Value).Replace("'", "''") : g.Value);
+                      && ((string)g.Value).Contains("'") ? ((string)g.Value).Replace("'", "''") : g.Value);
                 if (bus.State == FieldState.Modified
                                  && dict.Count == 0)
                     return;
