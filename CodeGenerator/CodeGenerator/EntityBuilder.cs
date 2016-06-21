@@ -12,6 +12,7 @@ namespace CodeGenerator
         private readonly string version = "1.0";
         private readonly Entity entity;
         public StringBuilder sb;
+        private List<Key> keys = new List<Key>();
 
         private IEnumerable<string> usings
         {
@@ -33,7 +34,8 @@ namespace CodeGenerator
 
         public void Build()
         {
-
+            if (String.IsNullOrEmpty(this.entity.Name))
+                throw new ArgumentNullException("Name");
             addHeader();
             addUsings();
 
@@ -178,16 +180,16 @@ namespace CodeGenerator
                 else if
                     (field.Length > 0 && (field.Type != "string" || field.Type != "String"))
                     throw new InvalidOperationException
-                      ("Field {0} is not a string type and due to that it cannot be set a length value" +
+                      ("Field {0} is not a string type and due to that a length attribute cannot be set " +
                       field.Name);
-
+               
                 Key _key = this.entity.Keys.Where
-                         (key => key.Column == field.Name).FirstOrDefault();
+                         (key => key.Columns.Any(k => k.Name == field.Name)).FirstOrDefault();
                 if (_key != null && _key.Type == KeyType.ForeignKey)
                     sb.AppendFormat("   [ForeignKey(\"{0}\")]\r\n", _key.Table);
                 if (_key != null && _key.Type == KeyType.PrimaryKey)
                     sb.AppendLine("   [PrimaryKey]");
-                addField(field, _key != null);
+                addField(field, _key != null && _key.Type == KeyType.ForeignKey);
 
             });
         }
@@ -242,7 +244,7 @@ namespace CodeGenerator
             sb.AppendLine("     }");
             sb.AppendLine("      set ");
             sb.AppendLine("      {  ");
-            sb.AppendLine("          if (this.State != FieldState.Modified &&");
+            sb.AppendLine("          if (this.State == FieldState.Unchanged &&");
             sb.AppendLine("              this.Transaction != null)");
             sb.AppendLine("              this.SetEdit();");
             sb.AppendFormat("           {0} = value;\r\n", field.Name.ToLower());
@@ -255,7 +257,14 @@ namespace CodeGenerator
 
         private void addEntityKey(Key key)
         {
-            Field _field = this.entity.Fields.Where(f => f.Name == key.Column).FirstOrDefault();
+            if (key.Type != KeyType.ForeignKey)
+                return;
+            if (String.IsNullOrEmpty(key.Children))
+                return;
+            if (key.Columns.Length > 1)
+                throw new IndexOutOfRangeException("Foreign key allows only one column");
+            var column = key.Columns.FirstOrDefault();            
+            Field _field = this.entity.Fields.Where(f => f.Name == column.Name).FirstOrDefault();            
             if (_field != null)
             {
                 sb.AppendFormat("    public partial class {0}\r\n", _field.Type);
@@ -275,7 +284,6 @@ namespace CodeGenerator
                     sb.AppendLine("                     return null;");
                     sb.AppendLine("                 }");
                     sb.AppendFormat("                   return Tables.{0}Table.GetInstance(trans)[this.Id];\r\n", this.entity.Name);
-
                     sb.AppendLine("            }");
                     sb.AppendLine("       } ");
                 }
@@ -292,8 +300,8 @@ namespace CodeGenerator
                     sb.AppendLine("                 {");
                     sb.AppendLine("                     return null;");
                     sb.AppendLine("                 }");
-                    sb.AppendFormat("                 return Tables.{0}Table.GetInstance(trans).GetRows\r\n", this.entity.Name);
-                    sb.AppendFormat("                             (new RecordCondition.Equal(\"{0}.Id\", this.Id));\r\n", key.Column);
+                    sb.AppendFormat("                 return Tables.{0}Table.GetInstance(trans).GetRows\r\n", this.entity.Name);    
+                    sb.AppendFormat("                             (new RecordCondition.Equal(\"{0}.Id\", this.Id));\r\n", column);
                     sb.AppendLine("            }");
                     sb.AppendLine("       } ");
                 }
@@ -312,6 +320,82 @@ namespace CodeGenerator
             sb.AppendLine("    /// </summary>");
             sb.AppendFormat("      public sealed class {0}Table : EntityTable//<{0}>\r\n", this.entity.Name);
             sb.AppendLine("      {");
+            foreach (Key key in this.entity.Keys)
+            {
+                if (key.Type != KeyType.PrimaryKey)
+                {
+                    sb.AppendFormat("        public {0}Key {0} {{ get; set; }}\r\n", key.Name);
+                    keys.Add(key);
+                }
+                sb.AppendLine();
+                sb.AppendLine();
+                sb.AppendFormat("\t\tpublic class {0}Key : EntityKey\r\n", key.Name);
+                sb.AppendLine("\t\t{");
+                sb.AppendFormat("\t\t public {0}Key(ISqlTransaction transaction)\r\n", key.Name);
+                sb.AppendFormat("\t\t\t  : base(transaction)\r\n");
+                sb.AppendLine("\t\t\t {"); 
+                sb.AppendLine();
+                sb.AppendLine("\t\t\t }");
+ 
+
+                if (key.Type == KeyType.ForeignKey)
+                {
+                    var column = key.Columns.FirstOrDefault();
+                    Field _field = this.entity.Fields.Where(f => f.Name == column.Name).FirstOrDefault();
+                    if (!_field.Unique)
+                    {
+                        sb.AppendFormat("\t\t\t public IEnumerable<{0}> this[{1} {2}]\r\n", this.entity.Name, _field.Type, _field.Type.ToLower());
+                        sb.AppendLine("\t\t\t {");
+                        sb.AppendLine("\t\t\t     get"); 
+                        sb.AppendLine("\t\t\t\t {");
+                        sb.AppendFormat("\t\t\t\t   SQLCondition condition = new RecordCondition.Equal(\"{0}.Id\", {1}.Id);\r\n", column.Name, _field.Type.ToLower());
+                        sb.AppendFormat("\t\t\t\t   return base.GetRows<{0}>(condition);\r\n", this.entity.Name);
+                        sb.AppendLine("\t\t\t\t }");
+                        sb.AppendLine("\t\t\t }");
+                    }
+                    else
+                    {
+                        sb.AppendFormat("\t\t\t public {0} this[{1} {2}]\r\n", this.entity.Name, _field.Type, _field.Type.ToLower());
+                        sb.AppendLine("\t\t\t {");
+                        sb.AppendLine("\t\t\t     get");
+                        sb.AppendLine("\t\t\t\t {");
+                        sb.AppendFormat("\t\t\t\t   SQLCondition condition = new RecordCondition.Equal(\"{0}.Id\", {1}.Id);\r\n", column.Name, _field.Type.ToLower());
+                        sb.AppendFormat("\t\t\t\t   return base.GetFirst<{0}>(condition);\r\n", this.entity.Name);
+                        sb.AppendLine("\t\t\t\t }");
+                        sb.AppendLine("\t\t\t }");
+                    }
+                }
+                else
+                {
+
+                    sb.AppendFormat("\t\t\t public IEnumerable<{0}> this[", this.entity.Name);
+                    int i = 0;
+                    foreach (KeyColumn col in key.Columns)
+                    {
+                        Field _field = this.entity.Fields.Where(f => f.Name == col.Name).FirstOrDefault();
+                        sb.AppendFormat("{0} {1}", _field.Type, col.Name.ToLower());
+                        i = i+1;
+                        if (i < key.Columns.Length)
+                            sb.Append(",");
+                    }
+                    sb.Append("]\r\n");
+                    sb.AppendLine("\t\t\t {");
+                    sb.AppendLine("\t\t\t     get");
+                    sb.AppendLine("\t\t\t\t {");
+                    sb.AppendLine("\t\t\t\t   SQLCondition condition = SQLCondition.Empty;");
+                    foreach (KeyColumn col in key.Columns)
+                    {                        
+                        sb.AppendFormat("\t\t\t\t   condition &= new RecordCondition.Equal(\"{0}\", {1});\r\n", col.Name, col.Name.ToLower());
+                    }
+                    sb.AppendFormat("\t\t\t\t      return base.GetRows<{0}>(condition);\r\n", this.entity.Name);
+                    sb.AppendLine("\t\t\t\t }");
+                    sb.AppendLine("\t\t\t }");
+                }
+                sb.AppendLine("\t\t}");                
+            }
+            sb.AppendLine();
+            sb.AppendLine();
+
             sb.AppendLine("      /// <summary>");
             sb.AppendLine("      /// ..(ctor)");
             sb.AppendLine("      /// </summary>");
@@ -319,15 +403,18 @@ namespace CodeGenerator
             sb.AppendFormat("      public {0}Table(ISqlTransaction transaction)\r\n", this.entity.Name);
             sb.AppendLine("           : base(transaction)  ");
             sb.AppendLine("       { ");
-            sb.AppendLine();
+            foreach (Key key in keys)
+            {
+                sb.AppendFormat("         {0} = new {0}Key(transaction);\r\n", key.Name);
+            }
             sb.AppendLine("       } ");
             sb.AppendLine();
             sb.AppendLine("     /// <summary>");
             sb.AppendLine("     /// Indexer responsible for returning particular entity object instance ");
             sb.AppendLine("     /// using simple condition.");
             sb.AppendLine("     /// </summary>");
-            sb.AppendLine("     /// <param name=\"field\">field name which is used as a condition");
-            sb.AppendLine("     /// <param name=\"value\">field value used as a condition");
+            sb.AppendLine("     /// <param name=\"field\">field name which is used as a condition</param>");
+            sb.AppendLine("     /// <param name=\"value\">field value used as a condition</param>");
             sb.AppendFormat("     /// <seealso cref=\"{0}\"/>\r\n", (object)this.entity.Name);
             sb.AppendLine("      [System.Runtime.CompilerServices.IndexerName(\"FindBy\")]");
             sb.AppendFormat("      public {0} this[string field, object value]\r\n", this.entity.Name);
@@ -343,7 +430,7 @@ namespace CodeGenerator
             sb.AppendLine("     /// Indexer responsible for returning particular entity object instance ");
             sb.AppendLine("     /// using unique ID field.");
             sb.AppendLine("     /// </summary>");
-            sb.AppendLine("     /// <param name=\"id\">ID key unique value");
+            sb.AppendLine("     /// <param name=\"id\">ID key unique value</param>");
             sb.AppendFormat("    /// <seealso cref=\"{0}\"/>\r\n", (object)this.entity.Name);
             sb.AppendLine("      [System.Runtime.CompilerServices.IndexerName(\"FindBy\")]");
             sb.AppendFormat("      public {0} this[int id]\r\n", this.entity.Name);
@@ -360,7 +447,7 @@ namespace CodeGenerator
             sb.AppendLine("     /// Method returning first instance of particular entity object");
             sb.AppendLine("     /// using multiple condition.");
             sb.AppendLine("     /// </summary>");
-            sb.AppendLine("     /// <param name=\"condition\">condition");
+            sb.AppendLine("     /// <param name=\"condition\">condition</param>");
             sb.AppendLine("     /// <seealso cref=\"typeof(SQLCondition)\"/>");
             sb.AppendFormat("     /// <seealso cref=\"{0}\"/>\r\n", (object)this.entity.Name);
             sb.AppendFormat("      public {0} GetFirst(SQLCondition condition)\r\n", this.entity.Name);
@@ -373,7 +460,7 @@ namespace CodeGenerator
             sb.AppendLine("     /// Method returning last instance of particular entity object");
             sb.AppendLine("     /// using multiple condition.");
             sb.AppendLine("     /// </summary>");
-            sb.AppendLine("     /// <param name=\"condition\">condition");
+            sb.AppendLine("     /// <param name=\"condition\">condition</param>");
             sb.AppendLine("     /// <seealso cref=\"typeof(SQLCondition)\"/>");
             sb.AppendFormat("     /// <seealso cref=\"{0}\"/>\r\n", (object)this.entity.Name);
             sb.AppendFormat("      public {0} GetLast(SQLCondition condition)\r\n", this.entity.Name);
@@ -385,7 +472,7 @@ namespace CodeGenerator
             sb.AppendLine("     /// Method returning collection of entities");
             sb.AppendLine("     /// using multiple condition within limiting of result.");
             sb.AppendLine("     /// </summary>");
-            sb.AppendLine("     /// <param name=\"condition\">condition");
+            sb.AppendLine("     /// <param name=\"condition\">condition</param>");
             sb.AppendLine("     /// <seealso cref=\"typeof(SQLCondition)\"/>");
             sb.AppendFormat("     /// <seealso cref=\"{0}\"/>\r\n", (object)this.entity.Name);
             sb.AppendFormat("      public IEnumerable<{0}> GetLimited(SQLCondition condition, int limit)\r\n", this.entity.Name);
@@ -397,7 +484,7 @@ namespace CodeGenerator
             sb.AppendLine("     /// Method returning collection of entities");
             sb.AppendLine("     /// using multiple condition.");
             sb.AppendLine("     /// </summary>");
-            sb.AppendLine("     /// <param name=\"condition\">condition");
+            sb.AppendLine("     /// <param name=\"condition\">condition</param>");
             sb.AppendLine("     /// <seealso cref=\"typeof(SQLCondition)\"/>");
             sb.AppendFormat("     /// <seealso cref=\"{0}\"/>\r\n", (object)this.entity.Name);
             sb.AppendFormat("      public IEnumerable<{0}> GetRows(SQLCondition condition)\r\n", this.entity.Name);
@@ -409,7 +496,7 @@ namespace CodeGenerator
             sb.AppendLine("     /// Method adding an entire new instance of entity object");
             sb.AppendLine("     /// to current transaction.");
             sb.AppendLine("     /// </summary>");
-            sb.AppendFormat("     /// <param name=\"row\">{0} row\r\n", (object)this.entity.Name);
+            sb.AppendFormat("     /// <param name=\"row\">{0} row</param>\r\n", (object)this.entity.Name);
             sb.AppendFormat("     /// <seealso cref=\"{0}\"/>\r\n", (object)this.entity.Name);
             sb.AppendFormat("      public void Add({0} row)\r\n", this.entity.Name);
             sb.AppendLine("       {       ");

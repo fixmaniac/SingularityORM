@@ -35,8 +35,22 @@ namespace CodeGenerator
                 XmlReader xml = (XmlReader)new XmlTextReader(inputFileName);               
                 Entity entity = Entity.Load(xml);               
                 EntityBuilder builder = new EntityBuilder(entity);
-                builder.Build();                
-                string result = builder.sb.ToString();
+                string result = "";
+                bool err = false;
+                try
+                {
+                    builder.Build();
+                }
+                catch (Exception e)
+                {
+                    err = true;
+                    result = string.Format("[Error]: {0}",e.Message);
+                }
+                finally
+                {
+                    if (!err)
+                        result = builder.sb.ToString();
+                }                
                 byte[] bytes = Encoding.UTF8.GetBytes(result);                
                 return bytes;
             }

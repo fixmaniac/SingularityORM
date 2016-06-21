@@ -49,6 +49,7 @@
     <Compile Include="Schema\Field.cs" />
     <Compile Include="Schema\Entity.cs" />
     <Compile Include="Schema\Key.cs" />
+    <Compile Include="Schema\KeyColumn.cs" />
     <Compile Include="Schema\KeyRelationType.cs" />
     <Compile Include="Schema\WithName.cs" />
     <Compile Include="SingularityCodeGenerator.cs" />

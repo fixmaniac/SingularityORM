@@ -11,17 +11,22 @@ namespace CodeGenerator.Schema
     public enum KeyType
     {
         PrimaryKey,
-        ForeignKey
+        ForeignKey,
+        IndexKey
     }
-    public class Key
+    public class Key : WithName
     {
+       
         [XmlAttribute("type")]
         public KeyType Type;
-        [XmlAttribute("column")]
-        public string Column;
+        //[XmlAttribute("column")]
+        //public string Column;
         [XmlAttribute("table")]
         public string Table;
         [XmlAttribute("children")]
         public string Children;
+        [XmlElement("column")]
+        public KeyColumn[] Columns;
+        
     }
 }
