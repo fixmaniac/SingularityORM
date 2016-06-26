@@ -57,6 +57,8 @@
     <Compile Include="BusinessObjectBase.cs" />
     <Compile Include="Conditions\RecordCondition.cs" />
     <Compile Include="Conditions\SQLCondition.cs" />
+    <Compile Include="EntityCreator.cs" />
+    <Compile Include="RepositoryCollection.cs" />
     <Compile Include="EntityDelegate.cs" />
     <Compile Include="EntityKey.cs" />
     <Compile Include="EntityProvider.cs" />
@@ -82,6 +84,7 @@
     <Compile Include="Reader\GetAllRowsAction.cs" />
     <Compile Include="Reader\SQLActionBase.cs" />
     <Compile Include="Config\SingularityProviderSection.cs" />
+    <Compile Include="RepositoryItem.cs" />
     <Compile Include="SQL_\DbPropertyChangedEventArgs.cs" />
     <Compile Include="SQL_\SQLExtensions.cs" />
     <Compile Include="SQL_\SQLProvider.cs" />

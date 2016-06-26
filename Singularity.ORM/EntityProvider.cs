@@ -9,6 +9,10 @@ namespace Singularity.ORM
     [TypeDescriptionProvider(typeof(BusinessTypeDescriptionProvider))]
     public abstract class EntityProvider
     {
+        public EntityProvider()
+        {
+            
+        }
         private Dictionary<String, Object> customFieldValues =
                                new Dictionary<String, Object>();
 

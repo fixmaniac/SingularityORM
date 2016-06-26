@@ -213,6 +213,7 @@ namespace Singularity.ORM.SQL
                 this.Connection.Open();
                 IsolationLevel level = this.Transaction.IsolationLevel;
             }
+            this.Provider.Repositories.Clear();
             this.Transaction.Dispose();
         }
     }

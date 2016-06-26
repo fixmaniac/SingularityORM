@@ -29,6 +29,7 @@ namespace Singularity.ORM.SQL
         protected MySqlTransaction Transaction { get; set; }
         public ProviderCredentials Credentials { get; set; }
         internal static HybridDictionary byType;
+        public RepositoryCollection<RepositoryItem> Repositories { get; set; }
         private static readonly string[] reserved = new string[] { "PropertyChanged", "Item", "Id" };
 
         private FindByAction actionFindBy;
@@ -114,6 +115,7 @@ namespace Singularity.ORM.SQL
             actionFindById = new FindByIdAction(this);
             actionFindBy = new FindByAction(this);
             SQLprovider.byType = new HybridDictionary();
+            Repositories = new RepositoryCollection<RepositoryItem>();
         }
 
         internal void Connect(ProviderCredentials credentials)

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
+using Singularity.ORM.SQL;
 
 namespace Singularity.ORM
 {
@@ -19,6 +21,8 @@ namespace Singularity.ORM
         void Commit();
         void Rollback();
         void BeginTransaction(System.Data.IsolationLevel isolationLevel);
+        SQLprovider Provider { get; }
+        //IDbConnection Connection { get; private set; }
     }
     #endregion
 }

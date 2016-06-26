@@ -88,6 +88,13 @@ namespace Singularity.ORM
             this.Context.AddNew((T)row, this.Transaction);
         }
 
+        public virtual Type EntityType
+        {
+            get
+            {
+                return typeof(EntityProvider);
+            }
+        }
 
         private void SetTRansaction(EntityProvider obj)
         {

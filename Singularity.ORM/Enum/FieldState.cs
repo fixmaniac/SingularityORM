@@ -14,6 +14,7 @@ namespace Singularity.ORM.Enum
         Unchanged,
         Added,
         Modified,
-        Deleted
+        Deleted,
+        Detached
     }
 }

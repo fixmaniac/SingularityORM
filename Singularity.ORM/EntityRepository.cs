@@ -22,6 +22,7 @@ namespace Singularity.ORM
         {
             T result = Activator.CreateInstance<T>();
             result.Transaction = transaction;
+            transaction.Provider.Repositories.Add(new RepositoryItem(result));
             return result;
         }
     }
