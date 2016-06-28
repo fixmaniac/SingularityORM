@@ -100,11 +100,13 @@ namespace Singularity.ORM
         /// </summary>
         /// <param name="prop"></param>
         /// <returns></returns>
-        public static bool IsEntityTable(this PropertyInfo prop){
+        public static bool IsEntityTable(this PropertyInfo prop)
+        {
 
             Type type = prop.PropertyType; 
             return type.IsSubclassOf(typeof(EntityTable));
         }
+
        
         /// <summary>
         /// 
@@ -227,10 +229,26 @@ namespace Singularity.ORM
         private System.Delegate handler;
 
         // properties
-        public string TableName { get; set; }
-        public EntityTable Table { get; set; }
-        public ISqlTransaction Transaction { get; set; }
-        internal Hashtable Map { get; set; }
+        public string TableName 
+        { 
+            get; 
+            set; 
+        }
+        public EntityTable Table 
+        { 
+            get; 
+            set; 
+        }
+        public ISqlTransaction Transaction 
+        { 
+            get; 
+            set; 
+        }
+        internal Hashtable Map 
+        { 
+            get; 
+            set; 
+        }
 
         /// <summary>
         /// (...ctor)
@@ -274,7 +292,7 @@ namespace Singularity.ORM
 
         internal void CreateTable(string tableName)
         {
-            SQLTable table = new SQLTable(tableName);
+            SQLTable table = new SQLTable(tableName, this.Table.EntityType);
 
             IDictionary<string, Type> fields = SQLprovider.PropertiesFromType
                 <IDictionary<string, Type>>(this.Table.EntityType);
@@ -321,10 +339,44 @@ namespace Singularity.ORM
                     table.Columns.Add(column);
                 }
             }
+            InitializeKeys(table);
             table.BuildSQL();
             //
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="table"></param>
+        internal void InitializeKeys(SQLTable table)
+        {
+            Type[] keys = this.Table.GetType().GetNestedTypes
+                               (BindingFlags.Public).Where(t => typeof(EntityKey).IsAssignableFrom(t)).
+                                           ToArray();
+            SQLTableKey primaryKey = new SQLTableKey
+                        (KeyType.PrimaryKey, "id");
+                         table.Keys.Add(primaryKey);
+            foreach (Type type in keys) {
+                SQLTableKey key = null;
+                PropertyInfo pi = type.GetProperty("Item");
+                ParameterInfo[] pars = pi.GetIndexParameters();
+                if (pars.Length == 1 &&
+                    pars.All(p => typeof(IBaseRecord).IsAssignableFrom(p.ParameterType))) {
+                    key = new SQLTableKey
+                        (KeyType.ForeignKey, pars.FirstOrDefault().Name);                       
+                } else {
+                    key = new SQLTableKey
+                        (KeyType.IndexerKey, pars.ToList().ConvertAll(p => p.Name).ToArray());
+                }
+                table.Keys.Add(key);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fieldname"></param>
+        /// <returns></returns>
         private bool isMendatory(string fieldname)
         {
             string propertyName = char.ToUpper(fieldname[0]) + fieldname.Substring(1);
@@ -339,6 +391,13 @@ namespace Singularity.ORM
              return false;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TBuilder"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="reason"></param>
+        /// <returns></returns>
         internal bool TryGetIsRequired<TBuilder>(TBuilder source, out ConvertionReasonType? reason) 
             where TBuilder : SQLBuilder
         {
@@ -360,16 +419,25 @@ namespace Singularity.ORM
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     internal class SQLTable
-    {
-        public string TableName { get; private set; }
+    {        
         public ICollection<ISQLTableColumn> Columns { get; set; }
-        public SQLTable(string tablename)
+        public ICollection<ISQLTableKey> Keys { get; set; }
+        public string TableName { get; private set; }
+        public Type RowType { get; set; }
+
+        public SQLTable(string tablename, Type rowtype)
         {
             this.TableName = tablename;
+            this.RowType = rowtype;
             this.Columns = new List<ISQLTableColumn>();
+            this.Keys = new List<ISQLTableKey>();
         }
-
+        
+        
         public void BuildSQL()
         {
             StringBuilder sql = new StringBuilder();
@@ -378,15 +446,28 @@ namespace Singularity.ORM
                  var isNotNull = col.IsMendatory ? "NOT NULL" : String.Empty;
                  sql.AppendFormat("'{0}' {1} {2},  \r\n", col.ColumnName, col.ColumnType, isNotNull);
             }
+             foreach (SQLTableKey key in this.Keys) {
+                 switch (key.Type) {
+                     case KeyType.PrimaryKey : sql.AppendFormat("PRIMARY KEY ({0})\r\n", key.Fields[0]);  
+                             break;
+                     case KeyType.ForeignKey : sql.AppendFormat("FOREIGN KEY ({0}) REFERENCES {1} (id) ON DELETE SET NULL \r\n",key.Fields[0],
+                         SQLprovider.getTableName(this.RowType));
+                             break;
+                     case KeyType.IndexerKey : sql.AppendFormat("INDEX ({0})\r\n", String.Join(",", key.Fields)); 
+                             break;
+                 }
+             }             
              sql.Append(") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8");
              throw new Exception(sql.ToString());
         }
     }
 
     internal class SQLTableColumn : ISQLTableColumn {
+
         public string ColumnName { get; private set; }
         public string ColumnType { get; set; }
         public bool IsMendatory { get; set; }
+
         public SQLTableColumn(string name)
         {
             this.ColumnName = name;
@@ -395,6 +476,13 @@ namespace Singularity.ORM
 
     internal class SQLTableKey : ISQLTableKey {
         public KeyType Type { get; set; }
+        public string[] Fields {get; set; }
+
+        public SQLTableKey(KeyType type, params string[] fields)
+        {
+            this.Type = type;
+            this.Fields = fields;
+        }
     }
 
     public interface ISQLTableColumn {        
