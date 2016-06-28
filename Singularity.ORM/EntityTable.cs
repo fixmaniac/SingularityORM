@@ -10,6 +10,9 @@ namespace Singularity.ORM
     public abstract class EntityTable
     {
         protected ISqlTransaction Transaction { get; set; }
+        /// <summary>
+        ///  Provider
+        /// </summary>
         protected SQLprovider Context
         {
             get
@@ -17,6 +20,13 @@ namespace Singularity.ORM
                 return ((SQLTransaction)this.Transaction).Provider;
             }
         }
+
+        /// <summary>
+        /// Find by Primary Key ID
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <returns></returns>
         protected virtual T FindByID<T>(int id) where T : EntityProvider
         {
             EntityProvider result = ((EntityProvider)this.Context.FindById[typeof(T), id]);
@@ -25,6 +35,13 @@ namespace Singularity.ORM
             return (T)result;
         }
 
+        /// <summary>
+        /// Find by indexer
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="field"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         protected virtual T FindBy<T>(string field, object value) where T : EntityProvider
         {
             EntityProvider result = ((EntityProvider)this.Context.FindBy[typeof(T), field, value]);
@@ -34,6 +51,12 @@ namespace Singularity.ORM
 
         }
 
+        /// <summary>
+        /// Get collection using multiple condition
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="condition"></param>
+        /// <returns></returns>
         protected virtual IEnumerable<T> GetRows<T>(SQLCondition condition) where T : EntityProvider
         {
             IEnumerable<EntityProvider> result =
@@ -45,6 +68,12 @@ namespace Singularity.ORM
             return result.Cast<T>();
         }
 
+        /// <summary>
+        /// Get first matched record using multiple condition
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="condition"></param>
+        /// <returns></returns>
         protected virtual T GetFirst<T>(SQLCondition condition) where T : EntityProvider
         {
             if (condition == SQLCondition.Empty) {
@@ -58,6 +87,12 @@ namespace Singularity.ORM
             return (T)result;
         }
 
+        /// <summary>
+        /// Get last matched record using multiple condition
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="condition"></param>
+        /// <returns></returns>
         protected virtual T GetLast<T>(SQLCondition condition) where T : EntityProvider
         {
             if (condition == SQLCondition.Empty) {
@@ -71,6 +106,13 @@ namespace Singularity.ORM
             return (T)result;
         }
 
+        /// <summary>
+        /// Get collection with limit
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="condition"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
         protected virtual IEnumerable<T> GetLimited<T>(SQLCondition condition, int limit) where T : EntityProvider
         {
             condition &= new RecordCondition.Limit(limit);
@@ -83,11 +125,19 @@ namespace Singularity.ORM
             return result.Cast<T>();
         }
 
+        /// <summary>
+        /// Add new instance of entity object
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="row"></param>
         protected virtual void Add<T>(EntityProvider row) where T : EntityProvider, new()
         {
             this.Context.AddNew((T)row, this.Transaction);
         }
 
+        /// <summary>
+        /// Return type of entity
+        /// </summary>
         public virtual Type RowType
         {
             get
@@ -96,11 +146,19 @@ namespace Singularity.ORM
             }
         }
 
+        /// <summary>
+        /// Set transaction
+        /// </summary>
+        /// <param name="obj"></param>
         private void SetTRansaction(EntityProvider obj)
         {
             obj["CurrentTransaction"] = this.Transaction;
         }
 
+        /// <summary>
+        /// (..ctor)
+        /// </summary>
+        /// <param name="transaction"></param>
         protected EntityTable(ISqlTransaction transaction)
         {
             this.Transaction = transaction;
