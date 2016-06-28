@@ -57,7 +57,7 @@
     <Compile Include="BusinessObjectBase.cs" />
     <Compile Include="Conditions\RecordCondition.cs" />
     <Compile Include="Conditions\SQLCondition.cs" />
-    <Compile Include="EntityCreator.cs" />
+    <Compile Include="SQLGenerator.cs" />
     <Compile Include="RepositoryCollection.cs" />
     <Compile Include="EntityDelegate.cs" />
     <Compile Include="EntityKey.cs" />

@@ -88,7 +88,7 @@ namespace Singularity.ORM
             this.Context.AddNew((T)row, this.Transaction);
         }
 
-        public virtual Type EntityType
+        public virtual Type RowType
         {
             get
             {

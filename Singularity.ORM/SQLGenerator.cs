@@ -51,7 +51,7 @@ namespace Singularity.ORM
         /// <param name="source"></param>
         /// <param name="action"></param>
         public static void ForEach<T>(this RepositoryCollection<T> source, Action<T> action) 
-                                     where T : RepositoryItem
+          where T : RepositoryItem
         {
             foreach (T element in source)
                 action(element);
@@ -64,7 +64,7 @@ namespace Singularity.ORM
         /// <param name="filter"></param>
         /// <param name="action"></param>
         internal static void ForEach<T>(this RepositoryCollection<T> source, Predicate<T> filter, Action<T> action)
-        where T : RepositoryItem
+           where T : RepositoryItem
         {
             foreach (T t in source)
             {
@@ -83,7 +83,7 @@ namespace Singularity.ORM
         /// <param name="filter"></param>
         /// <param name="action"></param>
         internal static void ForEach<T>(this IEnumerable<T> source, Predicate<T> filter, Action<T> action)
-        where T : PropertyInfo
+           where T : PropertyInfo
         {
             foreach (T t in source)
             {
@@ -93,6 +93,47 @@ namespace Singularity.ORM
                 }
                 action(t);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        internal static string GetForeignKeyTableName(this Type type, string property)             
+        {
+            if (typeof(IBaseRecord).IsAssignableFrom(type)) {
+                string name = char.ToUpper(property[0]) + property.Substring(1);
+                PropertyInfo pi = type.GetProperty(name,
+                                            BindingFlags.Instance |
+                                            BindingFlags.Public);
+                if (pi != null) {
+                    ForeignKeyAttribute fka = (ForeignKeyAttribute)
+                                     pi.GetCustomAttribute(typeof(ForeignKeyAttribute));
+                    return fka.TableName;
+                }
+            }
+            return string.Empty;
+        }
+
+        internal static int GetStringMaxLength(this Type type, string property)
+        {
+            if (typeof(IBaseRecord).IsAssignableFrom(type))
+            {
+                string name = char.ToUpper(property[0]) + property.Substring(1);
+                PropertyInfo pi = type.GetProperty(name,
+                                            BindingFlags.Instance |
+                                            BindingFlags.Public);
+                if (pi != null)
+                {
+                    TextMaxLengthAttribute tmla = (TextMaxLengthAttribute)
+                                     pi.GetCustomAttribute(typeof(TextMaxLengthAttribute));
+                    return tmla.MaxLength;
+                }
+            }
+            return 0;
         }
 
         /// <summary>
@@ -258,7 +299,7 @@ namespace Singularity.ORM
         public SQLBuilder(EntityTable table, ISqlTransaction transaction)
         {            
             this.Table = table;
-            this.TableName = (string)table.EntityType.GetField
+            this.TableName = (string)table.RowType.GetField
                                 ("tableName", 
                                    BindingFlags.NonPublic | 
                                    BindingFlags.Static).GetValue(null);
@@ -292,10 +333,10 @@ namespace Singularity.ORM
 
         internal void CreateTable(string tableName)
         {
-            SQLTable table = new SQLTable(tableName, this.Table.EntityType);
+            SQLTable table = new SQLTable(tableName, this.Table.RowType);
 
             IDictionary<string, Type> fields = SQLprovider.PropertiesFromType
-                <IDictionary<string, Type>>(this.Table.EntityType);
+                <IDictionary<string, Type>>(this.Table.RowType);
             foreach (KeyValuePair<string, Type> kvp in fields)
             {
                 string fieldName = kvp.Key;
@@ -320,13 +361,21 @@ namespace Singularity.ORM
                                 ColumnType = String.Format("ENUM({0})",String.Join(",",values))
                             };
                     }
+                    else if (fieldType == typeof(String)) {
+                            /// if string
+                            column = new SQLTableColumn(fieldName)
+                            {
+                                ColumnType = String.Format
+                                ("VARCHAR({0})", this.Table.RowType.GetStringMaxLength(fieldName))
+                            };
+                    }
                     else if (typeof(IBaseRecord).IsAssignableFrom(fieldType))  {
                             /// if entity relation
                             column = new SQLTableColumn(fieldName)
                             {
                                 ColumnType = "INT(11)"                            
                             };
-                    }
+                    }                    
                     else  {
                             /// any
                             column = new SQLTableColumn(fieldName)
@@ -355,7 +404,7 @@ namespace Singularity.ORM
                                            ToArray();
             SQLTableKey primaryKey = new SQLTableKey
                         (KeyType.PrimaryKey, "id");
-                         table.Keys.Add(primaryKey);
+            table.Keys.Add(primaryKey);
             foreach (Type type in keys) {
                 SQLTableKey key = null;
                 PropertyInfo pi = type.GetProperty("Item");
@@ -367,8 +416,8 @@ namespace Singularity.ORM
                 } else {
                     key = new SQLTableKey
                         (KeyType.IndexerKey, pars.ToList().ConvertAll(p => p.Name).ToArray());
-                }
-                table.Keys.Add(key);
+               }
+               table.Keys.Add(key);
             }
         }
 
@@ -380,7 +429,7 @@ namespace Singularity.ORM
         private bool isMendatory(string fieldname)
         {
             string propertyName = char.ToUpper(fieldname[0]) + fieldname.Substring(1);
-            PropertyInfo pi = this.Table.EntityType.GetProperty(propertyName, 
+            PropertyInfo pi = this.Table.RowType.GetProperty(propertyName, 
                 BindingFlags.Public | 
                 BindingFlags.Instance);
             if (pi != null) {
@@ -404,7 +453,7 @@ namespace Singularity.ORM
             reason = null;
             if (SQLGenerator.IsTableExist(source.Transaction, source.TableName))
             {
-                string[] entityFieldsNames  = SQLprovider.getFieldsNames(source.Table.EntityType);
+                string[] entityFieldsNames  = SQLprovider.getFieldsNames(source.Table.RowType);
                 string[] sqltableFieldNames = SQLGenerator.GetColumnsInfo(source.Transaction, source.TableName);
                 if (Enumerable.SequenceEqual(entityFieldsNames, sqltableFieldNames)) {
                      return false;
@@ -444,20 +493,24 @@ namespace Singularity.ORM
             sql.Insert(0, String.Format("CREATE TABLE '{0}' ( \r\n",TableName));
              foreach (SQLTableColumn col in this.Columns) {
                  var isNotNull = col.IsMendatory ? "NOT NULL" : String.Empty;
-                 sql.AppendFormat("'{0}' {1} {2},  \r\n", col.ColumnName, col.ColumnType, isNotNull);
+                 sql.AppendFormat("'{0}' {1} {2},", col.ColumnName, col.ColumnType, isNotNull);
+                 sql.Append(Environment.NewLine);
             }
              foreach (SQLTableKey key in this.Keys) {
                  switch (key.Type) {
-                     case KeyType.PrimaryKey : sql.AppendFormat("PRIMARY KEY ({0})\r\n", key.Fields[0]);  
+                     case KeyType.PrimaryKey : sql.AppendFormat("PRIMARY KEY ({0}),\r\n", key.Fields[0]);  
                              break;
-                     case KeyType.ForeignKey : sql.AppendFormat("FOREIGN KEY ({0}) REFERENCES {1} (id) ON DELETE SET NULL \r\n",key.Fields[0],
-                         SQLprovider.getTableName(this.RowType));
+                     case KeyType.ForeignKey : sql.AppendFormat("FOREIGN KEY ({0}) REFERENCES {1} (id) ON DELETE SET NULL, \r\n",key.Fields[0],
+                         this.RowType.GetForeignKeyTableName(key.Fields[0]));
                              break;
-                     case KeyType.IndexerKey : sql.AppendFormat("INDEX ({0})\r\n", String.Join(",", key.Fields)); 
+                     case KeyType.IndexerKey : sql.AppendFormat("INDEX ({0}),\r\n", String.Join(",", key.Fields)); 
                              break;
                  }
-             }             
-             sql.Append(") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8");
+             }
+             var index = sql.ToString().LastIndexOf(',');
+             if (index >= 0)
+                 sql.Remove(index, 1);
+                 sql.Append(") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8");
              throw new Exception(sql.ToString());
         }
     }
