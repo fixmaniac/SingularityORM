@@ -117,7 +117,7 @@ namespace Singularity.ORM
         /// <returns></returns>
         internal static string GetForeignKeyTableName(this Type type, string property)             
         {
-            if (typeof(IBaseRecord).IsAssignableFrom(type)) {
+           if (typeof(IBaseRecord).IsAssignableFrom(type)) {
                 string name = char.ToUpper(property[0]) + property.Substring(1);
                 PropertyInfo pi = type.GetProperty(name,
                                             BindingFlags.Instance |
@@ -133,8 +133,7 @@ namespace Singularity.ORM
 
         internal static int GetStringMaxLength(this Type type, string property)
         {
-            if (typeof(IBaseRecord).IsAssignableFrom(type))
-            {
+           if (typeof(IBaseRecord).IsAssignableFrom(type)) {
                 string name = char.ToUpper(property[0]) + property.Substring(1);
                 PropertyInfo pi = type.GetProperty(name,
                                             BindingFlags.Instance |
@@ -347,7 +346,7 @@ namespace Singularity.ORM
         internal void CreateTable(string tableName)
         {
             SQLTable table = new SQLTable(tableName, this.Table.RowType);
-
+            string cmd = String.Empty;
             IDictionary<string, Type> fields = SQLprovider.PropertiesFromType
                 <IDictionary<string, Type>>(this.Table.RowType);
             foreach (KeyValuePair<string, Type> kvp in fields)
@@ -402,7 +401,8 @@ namespace Singularity.ORM
                 }
             }
             InitializeKeys(table);
-            table.BuildSQL(this.Transaction.Provider);
+            table.BuildSQL(this.Transaction.Provider, ref cmd);
+            table.ExecSQL(cmd, this.Transaction);
             //
         }
 
@@ -500,20 +500,21 @@ namespace Singularity.ORM
         }
         
         
-        public void BuildSQL(SQLprovider dbProvider)
+        public void BuildSQL(SQLprovider dbProvider, ref string cmd)
         {
             StringBuilder sql = new StringBuilder();
-            sql.Insert(0, String.Format("CREATE TABLE '{0}' ( \r\n",TableName));
+            sql.Insert(0, String.Format("CREATE TABLE {0} ( \r\n",TableName));
              foreach (SQLTableColumn col in this.Columns) {
                  var isNotNull = col.IsMendatory ? "NOT NULL" : String.Empty;
-                 sql.AppendFormat("'{0}' {1} {2},", col.ColumnName, col.ColumnType, isNotNull);
+                 var isAutoIncrement = col.ColumnName.Equals("id") ? "AUTO_INCREMENT" : string.Empty;
+                 sql.AppendFormat("{0} {1} {2} {3},", col.ColumnName, col.ColumnType, isNotNull, isAutoIncrement);
                  sql.Append(Environment.NewLine);
             }
              foreach (SQLTableKey key in this.Keys) {
                  switch (key.Type) {
                      case KeyType.PrimaryKey : sql.AppendFormat("PRIMARY KEY ({0}),\r\n", key.Fields[0]);  
                              break;
-                     case KeyType.ForeignKey : sql.AppendFormat("FOREIGN KEY ({0}) REFERENCES {1} (id) ON DELETE SET NULL, \r\n",key.Fields[0],
+                     case KeyType.ForeignKey : sql.AppendFormat("FOREIGN KEY ({0}) REFERENCES {1} (id) ON DELETE CASCADE, \r\n",key.Fields[0],
                          this.RowType.GetForeignKeyTableName(key.Fields[0]));
                              break;
                      case KeyType.IndexerKey : sql.AppendFormat("INDEX ({0}),\r\n", String.Join(",", key.Fields)); 
@@ -525,7 +526,20 @@ namespace Singularity.ORM
                  sql.Remove(index, 1);
                  sql.AppendFormat(") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET={0}", 
                      dbProvider.Credentials.Collation);
-             throw new Exception(sql.ToString());
+
+                 cmd = sql.ToString();
+        }
+
+        public void ExecSQL(string cmd, ISqlTransaction transaction)
+        {            
+            if (transaction.Provider.Connection.State != ConnectionState.Open)
+                transaction.Provider.Connection.Open();
+            var query = new SQLQuery
+            {
+                CommandText = string.Format(cmd),
+                Connection = transaction.Provider.Connection
+            };
+            query.ExecuteNonQuery();
         }
     }
 
