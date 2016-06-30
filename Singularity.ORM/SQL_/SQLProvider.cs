@@ -21,6 +21,9 @@ using Singularity.ORM.Validation;
 
 namespace Singularity.ORM.SQL
 {
+    /// <summary>
+    ///  SQL Data Provider
+    /// </summary>
     public class SQLprovider : IDisposable
     {
         private static volatile SQLprovider instance;
