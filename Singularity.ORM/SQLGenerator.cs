@@ -98,6 +98,19 @@ namespace Singularity.ORM
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="arr"></param>
+        /// <param name="separator"></param>
+        /// <param name="formatString"></param>
+        /// <returns></returns>
+        public static string JoinFormat(this string[] arr, string separator, string formatString)
+        {
+            return string.Join(separator, 
+                      arr.Select(item => String.Format(formatString, item)));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
         /// <param name="property"></param>
@@ -306,7 +319,7 @@ namespace Singularity.ORM
             this.Transaction = transaction;
 
             Map = new Hashtable();                       
-            Map.Add(typeof(System.String), "VARCHAR");
+            Map.Add(typeof(bool), "TINYINT(1)");
             Map.Add(typeof(System.Int16), "SMALLINT");
             Map.Add(typeof(System.Int32), "INT");
             Map.Add(typeof(System.Int64), "BIGINT");  
@@ -358,7 +371,7 @@ namespace Singularity.ORM
                             string[] values = System.Enum.GetNames(fieldType);
                             column = new SQLTableColumn(fieldName)
                             {
-                                ColumnType = String.Format("ENUM({0})",String.Join(",",values))
+                                ColumnType = String.Format("ENUM({0})", values.JoinFormat(",", "'{0}'"))
                             };
                     }
                     else if (fieldType == typeof(String)) {
@@ -389,7 +402,7 @@ namespace Singularity.ORM
                 }
             }
             InitializeKeys(table);
-            table.BuildSQL();
+            table.BuildSQL(this.Transaction.Provider);
             //
         }
 
@@ -487,7 +500,7 @@ namespace Singularity.ORM
         }
         
         
-        public void BuildSQL()
+        public void BuildSQL(SQLprovider dbProvider)
         {
             StringBuilder sql = new StringBuilder();
             sql.Insert(0, String.Format("CREATE TABLE '{0}' ( \r\n",TableName));
@@ -510,11 +523,15 @@ namespace Singularity.ORM
              var index = sql.ToString().LastIndexOf(',');
              if (index >= 0)
                  sql.Remove(index, 1);
-                 sql.Append(") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8");
+                 sql.AppendFormat(") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET={0}", 
+                     dbProvider.Credentials.Collation);
              throw new Exception(sql.ToString());
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     internal class SQLTableColumn : ISQLTableColumn {
 
         public string ColumnName { get; private set; }
@@ -527,6 +544,9 @@ namespace Singularity.ORM
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     internal class SQLTableKey : ISQLTableKey {
         public KeyType Type { get; set; }
         public string[] Fields {get; set; }
@@ -538,10 +558,16 @@ namespace Singularity.ORM
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public interface ISQLTableColumn {        
         string ColumnType {get; set;}
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public interface ISQLTableKey {       
         KeyType Type {get; set;}
     }
