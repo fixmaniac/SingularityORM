@@ -6,13 +6,23 @@ using Singularity.ORM.Enum;
 
 namespace Singularity.ORM
 {
+    /// <summary>
+    /// 
+    /// </summary>
     [TypeDescriptionProvider(typeof(BusinessTypeDescriptionProvider))]
     public abstract class EntityProvider
     {
+        /// <summary>
+        /// 
+        /// </summary>
         public EntityProvider()
         {
             
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private Dictionary<String, Object> customFieldValues =
                                new Dictionary<String, Object>();
 
@@ -30,6 +40,10 @@ namespace Singularity.ORM
                 customFieldValues[fieldName] = value;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
         [Browsable(false)]
         public virtual ISqlTransaction Transaction
         {
@@ -42,6 +56,10 @@ namespace Singularity.ORM
                 this["CurrentTransaction"] = value;
             }
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
         [Browsable(false)]
         public virtual FieldState State
         {
@@ -57,6 +75,9 @@ namespace Singularity.ORM
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     class BusinessRow
     {
         public BusinessRow(String name, Type dataType)

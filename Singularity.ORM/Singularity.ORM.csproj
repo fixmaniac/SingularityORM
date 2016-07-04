@@ -29,7 +29,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\..\..\..\dll\Singularity.ORM.XML</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Devart.Data, Version=5.0.1384.0, Culture=neutral, PublicKeyToken=09af7300eec23701, processorArchitecture=MSIL">
@@ -56,6 +57,7 @@
     <Compile Include="BusinessObjectBase.cs" />
     <Compile Include="Conditions\RecordCondition.cs" />
     <Compile Include="Conditions\SQLCondition.cs" />
+    <Compile Include="Reader\GetFilteredColumnsAction.cs" />
     <Compile Include="SQLGenerator.cs" />
     <Compile Include="RepositoryCollection.cs" />
     <Compile Include="EntityDelegate.cs" />

@@ -131,6 +131,12 @@ namespace Singularity.ORM
             return string.Empty;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
         internal static int GetStringMaxLength(this Type type, string property)
         {
            if (typeof(IBaseRecord).IsAssignableFrom(type)) {
@@ -160,12 +166,20 @@ namespace Singularity.ORM
             return type.IsSubclassOf(typeof(EntityTable));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public static Hashtable EntitiyItemCollections 
+        { 
+            get; 
+            set; 
+        }
        
         /// <summary>
         /// 
         /// </summary>
         /// <param name="collection"></param>
-        private static object collectEntities(ISqlTransaction transaction)
+        private static object CollectEntities(ISqlTransaction transaction)
         {            
             var collection = transaction.Provider.Repositories;
              collection.ForEach
@@ -179,7 +193,7 @@ namespace Singularity.ORM
                                           BindingFlags.Static);
                         EntityTable table = (EntityTable)mi.Invoke
                                       (null, new object[] { transaction });
-                        if (table != null)  {
+                        if (table != null)  {                            
                             SQLBuilder builder = new SQLBuilder(table, transaction);                            
                             builder.Generate();                                                 
                         }
@@ -188,13 +202,25 @@ namespace Singularity.ORM
             return null;
         }
 
+        private static void CreateEntities(ISqlTransaction transaction)
+        {
+            foreach (SQLTable table in EntitiyItemCollections.Keys)
+            {                
+                string cmd = "";
+                table.BuildSQL(transaction.Provider, ref cmd);
+                table.ExecSQL(cmd, transaction);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="transaction"></param>
         public static void Initialize(ISqlTransaction transaction)
         {
-            collectEntities(transaction);
+            SQLGenerator.EntitiyItemCollections = new Hashtable();
+            CollectEntities(transaction);
+            CreateEntities(transaction);
         }
 
         /// <summary>
@@ -330,6 +356,9 @@ namespace Singularity.ORM
             
         }       
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Generate()
         {
             ConvertionReasonType? reason;
@@ -343,6 +372,10 @@ namespace Singularity.ORM
             }            
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tableName"></param>
         internal void CreateTable(string tableName)
         {
             SQLTable table = new SQLTable(tableName, this.Table.RowType);
@@ -401,8 +434,8 @@ namespace Singularity.ORM
                 }
             }
             InitializeKeys(table);
-            table.BuildSQL(this.Transaction.Provider, ref cmd);
-            table.ExecSQL(cmd, this.Transaction);
+            SQLGenerator.EntitiyItemCollections.Add(table, false);
+            
             //
         }
 
@@ -421,17 +454,35 @@ namespace Singularity.ORM
             foreach (Type type in keys) {
                 SQLTableKey key = null;
                 PropertyInfo pi = type.GetProperty("Item");
-                ParameterInfo[] pars = pi.GetIndexParameters();
+                ParameterInfo[] pars = pi.GetIndexParameters(); 
                 if (pars.Length == 1 &&
-                    pars.All(p => typeof(IBaseRecord).IsAssignableFrom(p.ParameterType))) {
-                    key = new SQLTableKey
-                        (KeyType.ForeignKey, pars.FirstOrDefault().Name);                       
-                } else {
-                    key = new SQLTableKey
-                        (KeyType.IndexerKey, pars.ToList().ConvertAll(p => p.Name).ToArray());
+                    pars.All(p => typeof(IBaseRecord).IsAssignableFrom(p.ParameterType))) {                       
+                        key = new SQLTableKey
+                            (KeyType.ForeignKey, pars.FirstOrDefault().Name) 
+                            {
+                                Name = GetKeyFieldName(type)
+                            };                       
+                } else {                    
+                        key = new SQLTableKey
+                            (KeyType.IndexerKey, pars.ToList().ConvertAll(p => p.Name).ToArray());
                }
                table.Keys.Add(key);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private string GetKeyFieldName(Type type)
+        {
+            var fi = type.GetField("KeyFieldName", BindingFlags.Public | BindingFlags.Static);
+            if (fi != null)
+            {
+                return fi.GetValue(null).ToString();
+            }
+            return string.Empty;
         }
 
         /// <summary>
@@ -472,8 +523,8 @@ namespace Singularity.ORM
                      return false;
                 }
                 else {
-                    reason = ConvertionReasonType.ColumnsChange;
-                     return true;
+                      reason = ConvertionReasonType.ColumnsChange;
+                        return true;
                 }
             }
             reason = ConvertionReasonType.TableNotExists;
@@ -499,7 +550,11 @@ namespace Singularity.ORM
             this.Keys = new List<ISQLTableKey>();
         }
         
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dbProvider"></param>
+        /// <param name="cmd"></param>
         public void BuildSQL(SQLprovider dbProvider, ref string cmd)
         {
             StringBuilder sql = new StringBuilder();
@@ -512,12 +567,15 @@ namespace Singularity.ORM
             }
              foreach (SQLTableKey key in this.Keys) {
                  switch (key.Type) {
-                     case KeyType.PrimaryKey : sql.AppendFormat("PRIMARY KEY ({0}),\r\n", key.Fields[0]);  
+                     case KeyType.PrimaryKey : sql.AppendFormat
+                         ("PRIMARY KEY ({0}),\r\n", key.Fields[0]);  
                              break;
-                     case KeyType.ForeignKey : sql.AppendFormat("FOREIGN KEY ({0}) REFERENCES {1} (id) ON DELETE CASCADE, \r\n",key.Fields[0],
-                         this.RowType.GetForeignKeyTableName(key.Fields[0]));
+                     case KeyType.ForeignKey: sql.AppendFormat
+                         ("FOREIGN KEY ({0}) REFERENCES {1} (id) ON DELETE CASCADE, \r\n", key.Name,
+                         this.RowType.GetForeignKeyTableName(key.Name));
                              break;
-                     case KeyType.IndexerKey : sql.AppendFormat("INDEX ({0}),\r\n", String.Join(",", key.Fields)); 
+                     case KeyType.IndexerKey : sql.AppendFormat
+                         ("INDEX ({0}),\r\n", String.Join(",", key.Fields)); 
                              break;
                  }
              }
@@ -530,6 +588,11 @@ namespace Singularity.ORM
                  cmd = sql.ToString();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cmd"></param>
+        /// <param name="transaction"></param>
         public void ExecSQL(string cmd, ISqlTransaction transaction)
         {            
             if (transaction.Provider.Connection.State != ConnectionState.Open)
@@ -562,6 +625,7 @@ namespace Singularity.ORM
     /// 
     /// </summary>
     internal class SQLTableKey : ISQLTableKey {
+        public String Name { get; set; }
         public KeyType Type { get; set; }
         public string[] Fields {get; set; }
 

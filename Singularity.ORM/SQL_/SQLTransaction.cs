@@ -184,6 +184,7 @@ namespace Singularity.ORM.SQL
                     isChange(rec, ref cmd, businessObj.State);
                 }
                 //cmd.BeforeExecute += new BeforeExecuteEventHandler(cmd_BeforeExecute);
+                //throw new Exception(cmd.CommandText);
                 cmd.ExecuteNonQuery();
                 this.LastInsertedId = GetLastInsertedId();
                 rec.Id = this.LastInsertedId;

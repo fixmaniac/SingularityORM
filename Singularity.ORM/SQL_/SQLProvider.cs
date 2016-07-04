@@ -53,6 +53,12 @@ namespace Singularity.ORM.SQL
             get { return actionGetAllRows; }
         }
 
+        private GetFilteredColumnsAction actionGetFilteredColumns;
+        public GetFilteredColumnsAction GetFilteredColumns
+        {
+            get { return actionGetFilteredColumns; }
+        }
+
         // CRUD Impl
         public static readonly string create = "INSERT INTO {0} ({1}) VALUES ({2})";
         public static readonly string read = "SELECT {0} FROM {1} WHERE {2}";
@@ -114,7 +120,8 @@ namespace Singularity.ORM.SQL
 
         internal void RepositoryHandle()
         {
-            actionGetAllRows = new GelAllRowsAction(this);
+            actionGetFilteredColumns = new GetFilteredColumnsAction(this);
+            actionGetAllRows = new GelAllRowsAction(this);           
             actionFindById = new FindByIdAction(this);
             actionFindBy = new FindByAction(this);
             SQLprovider.byType = new HybridDictionary();
@@ -323,8 +330,9 @@ namespace Singularity.ORM.SQL
 
         internal static IEnumerable<object> getValues(IBaseRecord row, string[] fields)
         {
+            var collection = new List<object>();
             for (int i = 0; i < fields.Length; i++)
-            {
+            {               
                 yield return getValueBy(row, fields[i].
                     Replace("`", ""));
             }
