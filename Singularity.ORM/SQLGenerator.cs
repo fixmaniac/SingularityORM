@@ -202,13 +202,29 @@ namespace Singularity.ORM
             return null;
         }
 
-        private static void CreateEntities(ISqlTransaction transaction)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="transaction"></param>
+        private static void CreateEntitiesTables(ISqlTransaction transaction)
         {
             foreach (SQLTable table in EntitiyItemCollections.Keys)
-            {                
+            {                        
                 string cmd = "";
                 table.BuildSQL(transaction.Provider, ref cmd);
                 table.ExecSQL(cmd, transaction);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="transaction"></param>
+        private static void CreateEntitiesTablesKeys(ISqlTransaction transaction)
+        {
+            foreach (SQLTable table in EntitiyItemCollections.Keys)
+            {                
+                table.UpdateKeys(transaction);               
             }
         }
 
@@ -220,7 +236,8 @@ namespace Singularity.ORM
         {
             SQLGenerator.EntitiyItemCollections = new Hashtable();
             CollectEntities(transaction);
-            CreateEntities(transaction);
+            CreateEntitiesTables(transaction);
+            CreateEntitiesTablesKeys(transaction);
         }
 
         /// <summary>
@@ -569,14 +586,7 @@ namespace Singularity.ORM
                  switch (key.Type) {
                      case KeyType.PrimaryKey : sql.AppendFormat
                          ("PRIMARY KEY ({0}),\r\n", key.Fields[0]);  
-                             break;
-                     case KeyType.ForeignKey: sql.AppendFormat
-                         ("FOREIGN KEY ({0}) REFERENCES {1} (id) ON DELETE CASCADE, \r\n", key.Name,
-                         this.RowType.GetForeignKeyTableName(key.Name));
-                             break;
-                     case KeyType.IndexerKey : sql.AppendFormat
-                         ("INDEX ({0}),\r\n", String.Join(",", key.Fields)); 
-                             break;
+                             break;                   
                  }
              }
              var index = sql.ToString().LastIndexOf(',');
@@ -586,6 +596,27 @@ namespace Singularity.ORM
                      dbProvider.Credentials.Collation);
 
                  cmd = sql.ToString();
+        }
+
+        public void UpdateKeys(ISqlTransaction transaction)
+        {            
+            foreach (SQLTableKey key in this.Keys)
+            {
+                switch (key.Type)
+                {
+                    case KeyType.ForeignKey: {
+                       var cmd = String.Format("ALTER TABLE {0} ADD FOREIGN KEY ({1}) REFERENCES {2} (id) ON DELETE CASCADE \r\n", TableName,key.Name,
+                                this.RowType.GetForeignKeyTableName(key.Name));
+                        ExecSQL(cmd, transaction);
+                        break;
+                    }
+                    case KeyType.IndexerKey: {
+                        var cmd = String.Format("ALTER TABLE {0} ADD INDEX ({1})\r\n", TableName,String.Join(",", key.Fields));
+                        ExecSQL(cmd, transaction);
+                        break;
+                    }
+                }
+            }            
         }
 
         /// <summary>
