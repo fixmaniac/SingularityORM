@@ -605,7 +605,7 @@ namespace Singularity.ORM
                 switch (key.Type)
                 {
                     case KeyType.ForeignKey: {
-                       var cmd = String.Format("ALTER TABLE {0} ADD FOREIGN KEY ({1}) REFERENCES {2} (id) ON DELETE CASCADE \r\n", TableName,key.Name,
+                       var cmd = String.Format("ALTER TABLE {0} ADD FOREIGN KEY ({1}) REFERENCES {2} (id) \r\n", TableName,key.Name,
                                 this.RowType.GetForeignKeyTableName(key.Name));
                         ExecSQL(cmd, transaction);
                         break;
