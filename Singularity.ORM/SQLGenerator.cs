@@ -121,7 +121,8 @@ namespace Singularity.ORM
                 string name = char.ToUpper(property[0]) + property.Substring(1);
                 PropertyInfo pi = type.GetProperty(name,
                                             BindingFlags.Instance |
-                                            BindingFlags.Public);
+                                            BindingFlags.Public |
+                                            BindingFlags.IgnoreCase);
                 if (pi != null) {
                     ForeignKeyAttribute fka = (ForeignKeyAttribute)
                                      pi.GetCustomAttribute(typeof(ForeignKeyAttribute));
@@ -143,7 +144,8 @@ namespace Singularity.ORM
                 string name = char.ToUpper(property[0]) + property.Substring(1);
                 PropertyInfo pi = type.GetProperty(name,
                                             BindingFlags.Instance |
-                                            BindingFlags.Public);
+                                            BindingFlags.Public |
+                                            BindingFlags.IgnoreCase);
                 if (pi != null)
                 {
                     TextMaxLengthAttribute tmla = (TextMaxLengthAttribute)
