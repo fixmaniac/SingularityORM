@@ -16,4 +16,13 @@ namespace Singularity.ORM
             this.TableName = tableName;
         }
     }
+
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class DBFieldAttribute : Attribute
+    {       
+        public DBFieldAttribute()
+        {
+            
+        }
+    }
 }

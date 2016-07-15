@@ -35,18 +35,27 @@ namespace Singularity.ORM.SQL
         public RepositoryCollection<RepositoryItem> Repositories { get; set; }
         private static readonly string[] reserved = new string[] { "PropertyChanged", "Item", "Id" };
 
+        /// <summary>
+        /// Find by action
+        /// </summary>
         private FindByAction actionFindBy;
         public FindByAction FindBy
         {
             get { return actionFindBy; }
         }
 
+        /// <summary>
+        /// Find by ID action
+        /// </summary>
         private FindByIdAction actionFindById;
         public FindByIdAction FindById
         {
             get { return actionFindById; }
         }
 
+        /// <summary>
+        /// Get collection
+        /// </summary>
         private GelAllRowsAction actionGetAllRows;
         public GelAllRowsAction GetRows
         {
@@ -77,6 +86,9 @@ namespace Singularity.ORM.SQL
         }
         #endregion
 
+        /// <summary>
+        /// (...ctor)
+        /// </summary>
         #region (..) ctor
         public SQLprovider()
         {
@@ -105,6 +117,11 @@ namespace Singularity.ORM.SQL
 
             RepositoryHandle();
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="credentials"></param>
         public SQLprovider(ProviderCredentials credentials)
         {
             // Connection 
@@ -118,6 +135,9 @@ namespace Singularity.ORM.SQL
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         internal void RepositoryHandle()
         {
             actionGetFilteredColumns = new GetFilteredColumnsAction(this);
@@ -128,6 +148,10 @@ namespace Singularity.ORM.SQL
             Repositories = new RepositoryCollection<RepositoryItem>();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="credentials"></param>
         internal void Connect(ProviderCredentials credentials)
         {
             MySqlConnection conn = new MySqlConnection();
@@ -139,6 +163,11 @@ namespace Singularity.ORM.SQL
         #endregion
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         static void conn_ConnectionLost(object sender, ConnectionLostEventArgs e)
         {
             if (e.Cause == ConnectionLostCause.Execute)
@@ -276,11 +305,23 @@ namespace Singularity.ORM.SQL
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="type"></param>
+        /// <returns></returns>
         internal static T PropertiesFromType<T>(Type type)
         {
             return (T)propertiesFromType(typeof(T), type);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         private static object propertiesFromType(Type result, Type type)
         {
             FieldInfo[] props = type.GetFields
@@ -311,7 +352,11 @@ namespace Singularity.ORM.SQL
             return null;
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         internal static string getTableName(Type type)
         {
             FieldInfo fi = type.GetField
@@ -319,6 +364,13 @@ namespace Singularity.ORM.SQL
             return ((string)fi.GetValue(null)).ToLower();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="property"></param>
+        /// <param name="returnedType"></param>
+        /// <returns></returns>
         internal static string getTableNameByField(Type type, string property, out Type returnedType)
         {
             PropertyDescriptor pd = BusinessValidator.GetPropertyDescriptor(type, property.Trim());
@@ -328,6 +380,12 @@ namespace Singularity.ORM.SQL
                 : string.Empty;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="fields"></param>
+        /// <returns></returns>
         internal static IEnumerable<object> getValues(IBaseRecord row, string[] fields)
         {
             var collection = new List<object>();
@@ -338,6 +396,11 @@ namespace Singularity.ORM.SQL
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         internal static string[] getPropertiesNames(Type type)
         {
             PropertyInfo[] props = type.GetProperties
@@ -346,12 +409,19 @@ namespace Singularity.ORM.SQL
             List<string> arr = new List<string>();
             foreach (PropertyInfo pi in props)
             {
-                if (!reserved.Contains(pi.Name) && pi.CanWrite)
+                if (!reserved.Contains(pi.Name) 
+                    && pi.CanWrite 
+                    && pi.GetCustomAttribute(typeof(DBFieldAttribute)) != null)
                     arr.Add(String.Format("`{0}`", pi.Name));
             }
             return arr.ToArray();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         internal static string[] getFieldsNames(Type type)
         {
             string table = getTableName(type);
@@ -386,11 +456,21 @@ namespace Singularity.ORM.SQL
 
         #region Transactions
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public ISqlTransaction BeginTransaction()
         {
             return this.BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="isolationLevel"></param>
+        /// <returns></returns>
         public ISqlTransaction BeginTransaction(System.Data.IsolationLevel isolationLevel)
         {
             if (this.Connection.State == ConnectionState.Closed)
@@ -401,6 +481,11 @@ namespace Singularity.ORM.SQL
             return transaction;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void transaction_OnCommit(object sender, CommitEventArgs e)
         {
             var arr = e.Collection;
