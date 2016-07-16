@@ -247,6 +247,20 @@ namespace Singularity.ORM.SQL
                         (IBaseRecord)obj, type, string.Empty, null));
                 this.transaction = _trans;
                 this.Transaction = _trans.Transaction;
+
+                switch (state)
+                {
+                    case FieldState.Added:
+                        {
+                            ((EntityProvider)obj).OnAdded();
+                            break;
+                        }
+                    case FieldState.Deleted:
+                        {
+                            ((EntityProvider)obj).OnDeleted();
+                            break;
+                        }
+                }
             }
             else
                 throw new InvalidCastException("Dany obiekt nie jest pełnoprawnym obiektem biznesowym");

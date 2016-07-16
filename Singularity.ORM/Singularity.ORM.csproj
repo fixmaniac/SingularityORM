@@ -57,6 +57,11 @@
     <Compile Include="BusinessObjectBase.cs" />
     <Compile Include="Conditions\RecordCondition.cs" />
     <Compile Include="Conditions\SQLCondition.cs" />
+    <Compile Include="Map\BoolMapper.cs" />
+    <Compile Include="Map\BusinessMapper.cs" />
+    <Compile Include="Map\ByteStringMapper.cs" />
+    <Compile Include="Map\EnumMapper.cs" />
+    <Compile Include="Map\GuidMapper.cs" />
     <Compile Include="Reader\GetFilteredColumnsAction.cs" />
     <Compile Include="SQLGenerator.cs" />
     <Compile Include="RepositoryCollection.cs" />

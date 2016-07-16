@@ -73,6 +73,38 @@ namespace Singularity.ORM
                 this["State"] = value;
             }
         }
+
+        /// <summary>
+        /// Handle an adding of new entity instance's object
+        /// </summary>
+        public virtual void OnAdded()
+        {
+
+        }
+
+        /// <summary>
+        /// Handle a deleting of entity
+        /// </summary>
+        public virtual void OnDeleted()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public virtual void OnCommited()
+        {
+
+        }
+
+        public virtual EntityRepository Repository
+        {
+            get
+            {
+                return null;
+            }
+        }
     }
 
     /// <summary>

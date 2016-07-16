@@ -289,9 +289,14 @@ namespace Singularity.ORM.Reader
                                 (Provider, sourceValue, sourceType);
                     value = EntityMapper.Map();
                 }
-                else if (sourceType == typeof(string) &&
-                        
-                    sourceValue.GetType() == typeof(byte[]))  {
+                else if (sourceType == typeof(Guid))
+                {
+                    EntityMapper = new GuidMapper
+                                    (Provider, sourceValue);
+                    value = EntityMapper.Map();
+                }
+                else if (sourceType == typeof(string) 
+                          && sourceValue.GetType() == typeof(byte[]))  {
                     EntityMapper = new ByteStringMapper
                                     (Provider, sourceValue);
                     value = EntityMapper.Map();

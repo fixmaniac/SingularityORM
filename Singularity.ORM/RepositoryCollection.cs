@@ -29,7 +29,7 @@ namespace Singularity.ORM
         /// <param name="item"></param>
         public void Add(TRep item)
         {         
-                if (!this.Contains(item))
+                if (!this.Any(i => i.Name == item.Name))
                     this.collection.Add(item.Name, item);
         }
 

@@ -35,12 +35,19 @@ namespace Singularity.ORM.SQL
             this.tables = new TableCollection(this);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="isolationLevel"></param>
         public void BeginTransaction(System.Data.IsolationLevel isolationLevel)
         {
             this.Transaction = this.Connection.BeginTransaction(isolationLevel);
             this.Isolationlevel = isolationLevel;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         IQueryable<IGrouping<IBaseRecord, BusinessObject>> Collection
         {
             get
@@ -49,6 +56,11 @@ namespace Singularity.ORM.SQL
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="diff"></param>
+        /// <returns></returns>
         private string[] GetQuerends(ref Dictionary<BusinessObject, string> diff)
         {
             Queue<string> arr = new Queue<string>();
@@ -97,6 +109,11 @@ namespace Singularity.ORM.SQL
             return arr.ToArray();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="queries"></param>
+        /// <returns></returns>
         private IEnumerable<SQLQuery> PrepareCommands(params string[] queries)
         {
             foreach (string query in queries)
@@ -110,6 +127,10 @@ namespace Singularity.ORM.SQL
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         internal int GetLastInsertedId()
         {
             SQLQuery cmd = new SQLQuery();
@@ -122,13 +143,26 @@ namespace Singularity.ORM.SQL
             return w;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public event CommitEventHandler OnCommit;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="e"></param>
         protected virtual void onCommit(CommitEventArgs e)
         {
             if (OnCommit != null)
                 OnCommit(this, e);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="rec"></param>
+        /// <param name="cmd"></param>
+        /// <param name="state"></param>
         private void isChange(IBaseRecord rec, ref SQLQuery cmd, FieldState state)
         {
             var group = this.Collection.Where
@@ -162,16 +196,14 @@ namespace Singularity.ORM.SQL
             cmd.CommandText = result;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void Commit()
         {
             onCommit(new CommitEventArgs(this, Collection));
-            if (this.Connection.State == ConnectionState.Closed)
-            {
-                this.Connection.Open();
-                IsolationLevel level = this.Transaction.IsolationLevel;
-                this.Transaction.Dispose();
-                this.Transaction = this.Connection.BeginTransaction(level);
-            }
+            IsolationLevel level = this.Transaction.IsolationLevel;
+            RefreshTransaction(level);
             Dictionary<BusinessObject, string> marker = null;
             PrepareCommands(GetQuerends(ref marker)).ToList().ForEach(delegate(SQLQuery cmd)
             {
@@ -182,15 +214,29 @@ namespace Singularity.ORM.SQL
                  || businessObj.State == FieldState.Modified)
                 {
                     isChange(rec, ref cmd, businessObj.State);
-                }
-                //cmd.BeforeExecute += new BeforeExecuteEventHandler(cmd_BeforeExecute);
-                //throw new Exception(cmd.CommandText);
+                }               
                 cmd.ExecuteNonQuery();
                 this.LastInsertedId = GetLastInsertedId();
                 rec.Id = this.LastInsertedId;
             });
             this.Transaction.Commit();
             this.Connection.Close();
+            RefreshTransaction(level);
+            foreach (KeyValuePair<BusinessObject, string> kvp in marker)
+            {
+                ((EntityProvider)kvp.Key.Row).OnCommited();
+            }
+            this.Connection.Close();
+        }
+
+        void RefreshTransaction(IsolationLevel level)
+        {
+            if (this.Connection.State == ConnectionState.Closed)
+            {
+                this.Connection.Open();
+                this.Transaction.Dispose();
+                this.Transaction = this.Connection.BeginTransaction(level);
+            }
         }
 
         void cmd_BeforeExecute(object sender, SqlQueryEventArgs e)
