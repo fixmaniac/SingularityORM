@@ -7,7 +7,7 @@ using Singularity.ORM.Enum;
 
 namespace Singularity.ORM.Conditions
 {
-    public abstract class RecordCondition : SQLCondition
+    public abstract class RecordCondition : SQLCondition 
     {
         public class Equal : RecordCondition
         {
