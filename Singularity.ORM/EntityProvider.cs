@@ -75,6 +75,14 @@ namespace Singularity.ORM
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public virtual void BeforeAdded()
+        {
+
+        }
+
+        /// <summary>
         /// Handle an adding of new entity instance's object
         /// </summary>
         public virtual void OnAdded()

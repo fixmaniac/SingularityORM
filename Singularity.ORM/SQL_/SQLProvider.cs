@@ -237,8 +237,13 @@ namespace Singularity.ORM.SQL
                         && typeof(IBaseRecord).IsAssignableFrom(type))
             {
                 INotifyPropertyChanged impl = (INotifyPropertyChanged)obj;
-                ((EntityProvider)obj)["State"] = state;
-                ((EntityProvider)obj)["CurrentTransaction"] = trans;
+                EntityProvider entity = (EntityProvider)obj;
+                entity["State"] = state;
+                entity["CurrentTransaction"] = trans;
+                if (state == FieldState.Added)
+                {
+                    entity.BeforeAdded();
+                }
                 impl.PropertyChanged += impl_PropertyChanged;
                 id = getId(impl);
                 SQLTransaction _trans = (SQLTransaction)trans;
@@ -302,8 +307,13 @@ namespace Singularity.ORM.SQL
                 (propertyName, BindingFlags.Public | BindingFlags.Instance);
             if (pi != null)
             {
-                if (pi.GetValue(obj) == null)
-                    return null;
+                if (pi.GetValue(obj) == null){
+                    if(typeof(IBaseRecord).IsAssignableFrom(pi.PropertyType)){
+                        return "(null)";
+                    }
+                    else
+                        return null;
+                }                    
                 else if (pi.GetValue(obj).GetType() == typeof(string)
                         && ((string)pi.GetValue(obj)).Contains("'"))
                     return ((string)pi.GetValue(obj)).Replace("'", "''");
@@ -404,7 +414,7 @@ namespace Singularity.ORM.SQL
         {
             var collection = new List<object>();
             for (int i = 0; i < fields.Length; i++)
-            {               
+            {                  
                 yield return getValueBy(row, fields[i].
                     Replace("`", ""));
             }

@@ -102,6 +102,7 @@ namespace Singularity.ORM.SQL
                         break;
 
                 }
+                result = result.Replace("'(null)'", "null");
                 _diff.Add(bus, result);
                 arr.Enqueue(result);
             });
@@ -193,6 +194,7 @@ namespace Singularity.ORM.SQL
                                        rec.Id);
                     break;
             }
+            result = result.Replace("'(null)'", "null");
             cmd.CommandText = result;
         }
 
