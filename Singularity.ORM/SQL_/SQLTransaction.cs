@@ -210,7 +210,8 @@ namespace Singularity.ORM.SQL
             PrepareCommands(GetQuerends(ref marker)).ToList().ForEach(delegate(SQLQuery cmd)
             {
                 BusinessObject businessObj = marker.Where
-                          (kvp => kvp.Value == cmd.CommandText).FirstOrDefault().Key;
+                          (kvp => kvp.Value == cmd.CommandText
+                              && !kvp.Key.Commited).FirstOrDefault().Key;
                 IBaseRecord rec = businessObj.Row;
                 if (businessObj.State == FieldState.Added
                  || businessObj.State == FieldState.Modified)
@@ -220,6 +221,7 @@ namespace Singularity.ORM.SQL
                 cmd.ExecuteNonQuery();
                 this.LastInsertedId = GetLastInsertedId();
                 rec.Id = this.LastInsertedId;
+                businessObj.Commited = true;
             });
             this.Transaction.Commit();
             this.Connection.Close();

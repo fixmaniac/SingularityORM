@@ -10,6 +10,7 @@ namespace Singularity.ORM
     public class BusinessObject : BusinessObjectBase
     {
         public FieldState State { get; private set; }
+        public bool Commited { get; set; }
         internal int ID { get; private set; }
         internal IBaseRecord Row { get; private set; }
         internal Type Type { get; private set; }
