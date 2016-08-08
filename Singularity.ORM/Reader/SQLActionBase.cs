@@ -365,6 +365,7 @@ namespace Singularity.ORM.Reader
             }
             cmd.Connection = this.Connection;
             cmd.BeforeExecute += new BeforeExecuteEventHandler(cmd_BeforeExecute);
+            this.Provider.OnQuery(new ProviderQueryEventArgs(this.Provider, cmd.CommandText));
             object result = cmd.ExecuteReader();
             MySqlDataReader reader = result as MySqlDataReader;           
             List<object> values = new List<object>();

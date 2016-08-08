@@ -22,6 +22,28 @@ using Singularity.ORM.Validation;
 namespace Singularity.ORM.SQL
 {
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    public delegate void OnQueryEventHandler(object sender, ProviderQueryEventArgs e);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ProviderQueryEventArgs : EventArgs
+    {
+        public ProviderQueryEventArgs(SQLprovider provider, string query)
+        {
+            this.Provider = provider;
+            this.Query = query;
+        }
+        public SQLprovider Provider { get; set; }
+        public string Query { get; set; }
+
+    }
+
+    /// <summary>
     ///  SQL Data Provider
     /// </summary>
     public class SQLprovider : IDisposable
@@ -66,6 +88,14 @@ namespace Singularity.ORM.SQL
         public GetFilteredColumnsAction GetFilteredColumns
         {
             get { return actionGetFilteredColumns; }
+        }
+
+
+        public event OnQueryEventHandler OnQueryAction;
+        internal virtual void OnQuery(ProviderQueryEventArgs e)
+        {
+            if (OnQueryAction != null)
+                OnQueryAction(this, e);
         }
 
         // CRUD Impl

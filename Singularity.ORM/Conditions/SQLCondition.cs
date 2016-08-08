@@ -54,7 +54,8 @@ namespace Singularity.ORM.Conditions
                                                              String.Format("limit {0} ", cond);
                         break;
                     case ConditionType.Null: _result =
-                                                           (bool)cond == true
+                                                           //(bool)cond == true
+                                                             (int)cond == 1
                                                             ? String.Format("{0} is null", field)
                                                             : String.Format("{0} is not null", field);
                         break;

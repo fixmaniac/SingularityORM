@@ -217,7 +217,8 @@ namespace Singularity.ORM.SQL
                  || businessObj.State == FieldState.Modified)
                 {
                     isChange(rec, ref cmd, businessObj.State);
-                }               
+                }
+                this.Provider.OnQuery(new ProviderQueryEventArgs(this.Provider, cmd.CommandText));
                 cmd.ExecuteNonQuery();
                 this.LastInsertedId = GetLastInsertedId();
                 rec.Id = this.LastInsertedId;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Xml.Serialization;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +45,7 @@ namespace Singularity.ORM
         /// <summary>
         /// 
         /// </summary>
+        [XmlIgnore]       
         [Browsable(false)]
         public virtual ISqlTransaction Transaction
         {
@@ -60,7 +62,9 @@ namespace Singularity.ORM
         /// <summary>
         /// 
         /// </summary>
-        [Browsable(false)]
+
+        [XmlIgnore]  
+        [Browsable(false)]        
         public virtual FieldState State
         {
             get
