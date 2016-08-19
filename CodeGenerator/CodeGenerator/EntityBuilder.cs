@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ *  Copyright (c) 2016, Łukasz Ligocki.
+ *  All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+
+ *  http://www.apache.org/licenses/LICENSE-2.0
+
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -185,10 +203,10 @@ namespace CodeGenerator
                
                 Key _key = this.entity.Keys.Where
                          (key => key.Columns.Any(k => k.Name == field.Name)).FirstOrDefault();
-                if (_key != null && _key.Type == KeyType.ForeignKey)
-                    sb.AppendFormat("   [ForeignKey(\"{0}\")]\r\n", _key.Table);
                 if (_key != null && _key.Type == KeyType.PrimaryKey)
                     sb.AppendLine("   [PrimaryKey]");
+                if (_key != null && _key.Type == KeyType.ForeignKey)
+                    sb.AppendFormat("   [ForeignKey(\"{0}\")]\r\n", _key.Table);                
                 addField(field, _key != null && _key.Type == KeyType.ForeignKey);
 
             });
@@ -200,8 +218,8 @@ namespace CodeGenerator
             {
                 sb.AppendFormat("            if (propertyName.Equals(\"{0}\"))\r\n", field.Name);
                 sb.AppendLine("            {");
-                sb.AppendFormat("                \tif ({1}.{0}Changed != null)\r\n", field.Name, (object)this.entity.Name);
-                sb.AppendFormat("                \t\t  {1}.{0}Changed(({1})this);\r\n", field.Name, (object)this.entity.Name);
+                sb.AppendFormat("                \t if ({1}.{0}Changed != null)\r\n", field.Name, (object)this.entity.Name);
+                sb.AppendFormat("                \t\t {1}.{0}Changed(({1})this);\r\n", field.Name, (object)this.entity.Name);
                 sb.AppendLine("            }");
             });
         }
@@ -227,6 +245,7 @@ namespace CodeGenerator
 
         private void addField(Field field, bool isForeignKey)
         {
+            sb.AppendLine("   [DBField]");
             sb.AppendFormat("   public {0} {1}\r\n", field.Type, field.Name);
             sb.AppendLine("   {");
             sb.AppendLine("      get  ");
@@ -318,7 +337,7 @@ namespace CodeGenerator
             sb.AppendLine("    /// <summary>");
             sb.AppendFormat("    /// Table class for entity {0}.\r\n", (object)this.entity.Name);
             sb.AppendLine("    /// </summary>");
-            sb.AppendFormat("      public sealed class {0}Table : EntityTable//<{0}>\r\n", this.entity.Name);
+            sb.AppendFormat("      public class {0}Table : EntityTable//<{0}>\r\n", this.entity.Name);
             sb.AppendLine("      {");
             foreach (Key key in this.entity.Keys)
             {
@@ -329,8 +348,14 @@ namespace CodeGenerator
                 }
                 sb.AppendLine();
                 sb.AppendLine();
-                sb.AppendFormat("\t\tpublic class {0}Key : EntityKey\r\n", key.Name);
-                sb.AppendLine("\t\t{");
+                sb.AppendFormat("\t\tpublic sealed  class {0}Key : EntityKey\r\n", key.Name);
+                sb.AppendLine("\t\t{");               
+                sb.AppendLine();
+                if (key.Type == KeyType.ForeignKey)
+                {
+                    sb.AppendFormat("\t\t public static string KeyFieldName = \"{0}\";\r\n", key.Columns.FirstOrDefault().Name);
+                    sb.AppendLine();
+                }
                 sb.AppendFormat("\t\t public {0}Key(ISqlTransaction transaction)\r\n", key.Name);
                 sb.AppendFormat("\t\t\t  : base(transaction)\r\n");
                 sb.AppendLine("\t\t\t {"); 
@@ -512,6 +537,14 @@ namespace CodeGenerator
             sb.AppendLine("          if (transaction == null) return null; ");
             sb.AppendFormat("             return ({0}Table)transaction.Tables[typeof({0}Table)];\r\n", this.entity.Name);
             sb.AppendLine("       }");
+            sb.AppendLine();
+            sb.AppendLine("      public override Type RowType");
+            sb.AppendLine("       {        ");
+            sb.AppendLine("       \tget");
+            sb.AppendLine("       \t{");
+            sb.AppendFormat("       \t\treturn typeof({0});\r\n", this.entity.Name);
+            sb.AppendLine("       \t}");
+            sb.AppendLine("       }        ");          
             sb.AppendLine();
             sb.AppendLine("     }");
             sb.AppendLine("   }");
