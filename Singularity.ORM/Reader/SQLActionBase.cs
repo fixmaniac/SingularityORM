@@ -19,8 +19,11 @@
 using System;
 using System.Data;
 using System.ComponentModel;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Threading;
 using System.Reflection;
 using Devart.Data.MySql;
 using Singularity.ORM.SQL;
@@ -31,6 +34,19 @@ using Singularity.ORM.Conditions;
 
 namespace Singularity.ORM.Reader
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="reader"></param>
+    /// <param name="counter"></param>
+    /// <param name="type"></param>
+    /// <param name="props"></param>
+    /// <param name="values"></param>
+    /// <param name="obj"></param>
+    public delegate void AsyncMethodCaller
+        (IDataReader reader, int counter, Type type, Type[] props, List<object> values, ref object obj);
+
+
     #region SQL Actions
     /// <summary>
     ///  
@@ -322,6 +338,13 @@ namespace Singularity.ORM.Reader
             return value != null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="resultType"></param>
+        /// <param name="type"></param>
+        /// <param name="cond"></param>
+        /// <returns></returns>
         [DataObjectMethod(DataObjectMethodType.Select, true)]
         private object get(Type resultType, Type type, SQLCondition cond)
         {
@@ -343,7 +366,7 @@ namespace Singularity.ORM.Reader
                 this.Connection.Open();
             
             string tableName = SQLprovider.getTableName(type);
-            var _columns = SQLprovider.PropertiesFromType<IDictionary<string, Type>>(type);
+            var     _columns = SQLprovider.PropertiesFromType<IDictionary<string, Type>>(type);
 
             SQLQuery cmd = this.CreateCommand();
             List<Type> _props = new List<Type>();
@@ -351,10 +374,10 @@ namespace Singularity.ORM.Reader
            
             foreach (KeyValuePair<string, Type> kvp in _columns) {
                 string _columnName = kvp.Key;
-                Type _columnType = kvp.Value;
-                if (_columnName.StartsWith("_")) {
-                    _columnName = _columnName.Remove(0, 1);
-                    _fields.Add(String.Format("{0}.{1}", tableName, _columnName));
+                Type  _columnType = kvp.Value;
+                if   (_columnName.StartsWith("_")) {
+                      _columnName = _columnName.Remove(0, 1);
+                      _fields.Add(String.Format("{0}.{1}", tableName, _columnName));
                 }
                 else
                     _fields.Add(String.Format("{0}.{1}", tableName, _columnName));
@@ -387,48 +410,31 @@ namespace Singularity.ORM.Reader
             object result = cmd.ExecuteReader();
             MySqlDataReader reader = result as MySqlDataReader;           
             List<object> values = new List<object>();
+            //ConcurrentBag<object> values = new ConcurrentBag<object>();
             if (reader.FieldCount != props.Length)
                 throw new InvalidDatabaseStructureException(tableName);
 
+            //AsyncMethodCaller caller = new AsyncMethodCaller(SQLReader);
+
             while (reader.Read())
             {
-                object obj = null;
+                object obj = null;                
                 for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    if (i == 0 && obj == null)
-                    {
-                        obj = Activator.CreateInstance(type);
-                    }
-                    if (obj != null)
-                    {                       
-                        string field = !char.IsNumber(reader.GetName(i)[0])
-                                ? reader.GetName(i) 
-                                : string.Format("_{0}", reader.GetName(i));
-                        object value = null;
-                        if (reader.GetValue(i).GetType() == typeof(DBNull)) {
-                            if (props[i] == typeof(int))
-                                value = 0;
-                            else if (props[i] == typeof(string))
-                                value = string.Empty;
-                        }
-                        else {
-                            if (!TryGetConvert(props[i], reader.GetValue(i), out value))
-                                    value = reader.GetValue(i);
-                        }
-                        try
-                        {                            
-                            type.GetField(field, BindingFlags.NonPublic | BindingFlags.Instance).
-                                 SetValue(obj, value);
-                        }
-                        catch (Exception)
-                        {                            
-                        }
-                    }
-                    if (i == reader.FieldCount - 1)
-                        values.Add(obj);
+                {                   
+                     SQLReader(reader, i, type, props, values, ref obj);
+                   
+                    // Initiate the asychronous call.
+                    //IAsyncResult _result = caller.BeginInvoke(reader, i, type, props, values, ref obj, null, null);
+                    //// Wait for the WaitHandle to become signaled.
+                    //_result.AsyncWaitHandle.WaitOne();
+                    //// End
+                    //caller.EndInvoke(ref obj, _result);
+                    //// Close the wait handle.
+                    //_result.AsyncWaitHandle.Close();
                 }
             }
             cmd.Connection.Close();
+                        
             if (resultType == typeof(IEnumerable<object>))
                 return values;
             else
@@ -438,6 +444,56 @@ namespace Singularity.ORM.Reader
                     return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="counter"></param>
+        /// <param name="type"></param>
+        /// <param name="props"></param>
+        /// <param name="values"></param>
+        /// <param name="obj"></param>
+        unsafe void SQLReader(IDataReader reader, int counter, Type type, Type[] props, List<object> values, ref object obj)
+        {
+                       
+            if (counter == 0 && obj == null)
+            {
+                obj = Activator.CreateInstance(type);
+            }
+            if (obj != null)
+            {
+                string field = !char.IsNumber(reader.GetName(counter)[0])
+                        ? reader.GetName(counter)
+                        : string.Format("_{0}", reader.GetName(counter));
+                object value = null;
+                if (reader.GetValue(counter).GetType() == typeof(DBNull)) {
+                    if      (props[counter] == typeof(int))
+                          value = 0;
+                    else if (props[counter] == typeof(string))
+                          value = string.Empty;
+                }
+                else {
+                    if (!TryGetConvert(props[counter], reader.GetValue(counter), out value))
+                        value = reader.GetValue(counter);
+                }
+                try {
+                    type.GetField(field, BindingFlags.NonPublic | BindingFlags.Instance).
+                            SetValue(obj, value);
+                }
+                catch (Exception) {
+                }           
+            }
+            if (counter == reader.FieldCount - 1)
+            {
+                values.Add(obj);
+            }                    
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void cmd_BeforeExecute(object sender, SqlQueryEventArgs e)
         {
             MySqlConnection conn = e.Connection;

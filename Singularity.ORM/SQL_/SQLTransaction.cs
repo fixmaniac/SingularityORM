@@ -189,11 +189,14 @@ namespace Singularity.ORM.SQL
             BusinessObject bus = group.FirstOrDefault();
             KeyValuePair<string, object>[] kvp = group.
                  Where(p => !String.IsNullOrEmpty(p.PropertyName)).ToList().ConvertAll
-                 (p => new KeyValuePair<string, object>(p.PropertyName,
-                     p.Value is string && ((string)p.Value).Contains("'")
-                     ? ((string)p.Value).Replace("'", "''") : p.Value)).ToArray();
+                      (p => new KeyValuePair<string, object>
+                      (p.PropertyName, p.Value is string
+                      && ((string)p.Value).Contains("'")
+                       ? ((string)p.Value).Replace("'", "''") 
+                       : SQLprovider.getValues(p.Row, 
+                         new string[] { p.PropertyName }).FirstOrDefault())).ToArray();
 
-            string table = SQLprovider.getTableName(bus.Type);
+            string   table  = SQLprovider.getTableName(bus.Type);
             string[] fields = SQLprovider.getPropertiesNames(bus.Type);
             object[] values = SQLprovider.getValues(bus.Row, fields).ToArray();
             string result = "";
@@ -209,7 +212,7 @@ namespace Singularity.ORM.SQL
                 case FieldState.Modified: result = SQLprovider.update;
                     result = String.Format(result,
                                table, kvp.JoinFormat(",", "`{0}` = '{1}'"),
-                                       rec.Id);
+                                rec.Id);                                       
                     break;
             }
             result = result.Replace("'(null)'", "null");

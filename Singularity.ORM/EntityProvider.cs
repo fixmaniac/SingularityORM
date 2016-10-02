@@ -128,6 +128,28 @@ namespace Singularity.ORM
 
         }
 
+        public override bool Equals(object v)
+        {
+            if (v == null)
+            {
+                return false;
+            }
+            IBaseRecord _current = (IBaseRecord)this;
+            IBaseRecord _foreign = (IBaseRecord)v;
+            if (_current.Id > 0 && _foreign.Id > 0)
+            {
+                return this.GetType() == v.GetType()
+                    && _current.Id == _foreign.Id
+                    && this.Transaction == ((EntityProvider)v).Transaction;
+            }
+            return this.GetHashCode() == v.GetHashCode();
+        }
+
+        //public override int GetHashCode()
+        //{
+        //    return 29;
+        //}
+
         public virtual EntityRepository Repository
         {
             get

@@ -31,6 +31,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>
     </DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Devart.Data, Version=5.0.1384.0, Culture=neutral, PublicKeyToken=09af7300eec23701, processorArchitecture=MSIL">
