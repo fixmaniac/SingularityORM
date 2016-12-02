@@ -44,270 +44,63 @@ SQLprovider Context = new SQLprovider(new ProviderCredentials() {
     </startup> 
 </configuration>
 ```
-### 2. Create new instance of an employee object
+### 2. Create new instance of an order object
 
 ```c#
- using (ISqlTransaction trans = Context.BeginTransaction())
-                {
-                    Tables.EmployeeTable   Employees   = Tables.EmployeeTable.GetInstance(trans);
-
-                    Employee employee = new Employee()
+/// Open a provider Facade
+            using (SQLprovider proxy = new SQLprovider()) {
+                /// SQL dump (if required)
+                proxy.OnQueryAction += new OnQueryEventHandler(proxy_OnQueryAction);
+                /// New trasanction
+                using (ISqlTransaction trans = proxy.BeginTransaction(System.Data.IsolationLevel.Unspecified)) {
+                    PaymentRepository repo = EntityRepository.GetInstance<PaymentRepository>(trans);
+                    Order order = new Order()
                     {
-                        Birth_date = new DateTime(1965, 7, 23),
-                        First_name = "John",
-                        Last_name = "Doe",
-                        Gender = Gender.M,
-                        Hire_date = DateTime.Now,                        
+                        OrderNumber = "9998/FV/2009/02",
+                        OrderDate = DateTime.Now,
+                        OrderJsonData = "{\"notifyUrl\":\"http://localhost/payupages\",\"customerIp\":\"127.0.0.1\",\"merchantPosId\":\"145227\",\"description\":\"klocki DUPLO\",\"currencyCode\":\"PLN\",\"totalAmount\":\"224900\",\"extOrderId\":\"3325844a-c6d8-4196-bb84-280d4052016b\",\"validityTime\":\"186400\",\"buyer\":{\"email\":\"jan.kowalski@vp.pl\",\"phone\":\"111-222-333\",\"firstName\":\"Jan\",\"lastName\":\"Kowalski\"},\"products\":[{\"name\":\"Zestaw Lego DUPLO z elektrycznym pociągiem\",\"unitPrice\":\"24999\",\"quantity\":\"1\"},{\"name\":\"Zestaw szyn\",\"unitPrice\":\"00\",\"quantity\":\"1\"}]}"
                     };
-                    Employees.Add(employee);
+                    repo.Orders.Add(order);
                     trans.Commit();
                 }
+            } 
 ```
 
-### 3. Searching data with multiple conditions (SQL JOIN)
+### 3. Searching data with specific conditions 
 
 ```c#
- using (ISqlTransaction trans = Context.BeginTransaction())
+  Order.CurrentDebtChangedHandler(new EntityDelegate<Order>(ZmianaZadluzenia));
+
+            /// Open a provider Facade
+            using (SQLprovider proxy = new SQLprovider())
+            {
+                /// SQL dump (if required)
+                proxy.OnQueryAction += new OnQueryEventHandler(proxy_OnQueryAction);
+                /// New trasanction
+                using (ISqlTransaction trans = proxy.BeginTransaction(System.Data.IsolationLevel.Unspecified))
                 {
-                    Tables.AbsenceTable    Absences    = Tables.AbsenceTable.GetInstance(trans);
-                    var absences = Absences.GetRows(
-                        new SQLCondition.And(new SQLCondition[] { 
-                             new RecordCondition.Null("Employee.Dept.Dept_name", false),
-                             new RecordCondition.Equal("Reason", Reason.other),
-                             new RecordCondition.Equal("Employee.Gender", Gender.F)
-                            })
-                        );
-                    foreach (var absence in absences)
-                    {
-                        Console.WriteLine(String.Format("Employee: {0} {1}, 
-                         Absence in {2}, due to reason: {3}", absence.Employee.First_name,
-                          absence.Employee.Last_name,
-                          absence.Date,
-                          absence.Reason));
-                    } 
+                    PaymentRepository repo = EntityRepository.GetInstance<PaymentRepository>(trans);
+                    Order order = repo.Orders.GetFirst(SQLCondition.Empty);
+                    order.CurrentDebt = 0;                    
+                    trans.Commit();
+                }
             }
+            Console.ReadLine();       
+        }
 ```
 
 #Sample usage scenarios
 
+Example of XML schema file contained entity structure description
+
 ![singularity-xml](https://cloud.githubusercontent.com/assets/8134988/20853866/60f4f290-b8ef-11e6-8a87-3789a37d30a5.png)
-![singularity-example](https://cloud.githubusercontent.com/assets/8134988/20853865/5eeb89be-b8ef-11e6-9f5d-463763e553d5.png)
+
+Example of Code generated entity schema class
+
 ![singularity-entity](https://cloud.githubusercontent.com/assets/8134988/20853864/5bd1add0-b8ef-11e6-8775-1ffb0e793481.png)
 
-### 1.Database 
-```sql
-DROP DATABASE IF EXISTS testORM;
-CREATE DATABASE testORM;
-USE testORM;
-DROP TABLE IF EXISTS departments, employees, absences;
+Example of use
 
-CREATE TABLE departments (
-    id      INT             NOT NULL AUTO_INCREMENT,
-    dept_name VARCHAR(25)            NOT NULL,    
-    PRIMARY KEY (id)                      -- Index built automatically on primary-key column                                           
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+![singularity-example](https://cloud.githubusercontent.com/assets/8134988/20853865/5eeb89be-b8ef-11e6-9f5d-463763e553d5.png)
 
-CREATE TABLE employees (
-    id      INT             NOT NULL AUTO_INCREMENT,
-    birth_date  DATE            NOT NULL,
-    first_name  VARCHAR(14)     NOT NULL,
-    last_name   VARCHAR(16)     NOT NULL,
-    gender      ENUM ('M','F')  NOT NULL,  -- Enumeration of either 'M' or 'F'  
-    hire_date   DATE            NOT NULL,
-    dept INT DEFAULT NULL,
-    PRIMARY KEY (id),                      -- Index built automatically on primary-key column  
-    FOREIGN KEY (dept) REFERENCES departments (id) ON DELETE SET NULL                                      
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-CREATE TABLE absences (
-    id      INT                 NOT NULL AUTO_INCREMENT,
-    employee INT 		NOT NULL,
-    date  DATE            NOT NULL,    
-    description  VARCHAR(50)     NOT NULL,
-    reason       ENUM ('holiday','sickness','other')  NOT NULL,     
-    PRIMARY KEY (id),
-    FOREIGN KEY (employee) REFERENCES employees (id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-```
-
-### 2.Entity class
-```c#
-public enum Gender {
-        M = 1,
-        F = 2
-    }
-
-    public class Employee : EntityProvider, INotifyPropertyChanged, IBaseRecord
-    {
-        internal static readonly string tableName = "employees";
-
-        private int id;
-        private DateTime birth_date;
-        private string first_name;
-        private string last_name;
-        private Gender gender;
-        private DateTime hire_date;
-        private Department dept;
-
-        public int Id
-        {
-            get { return id; }
-            set
-            {
-                id = value;
-                NotifyPropertyChanged();
-            }
-        }
-        public DateTime Birth_date
-        {
-            get { return birth_date; }
-            set
-            {
-                birth_date = value;
-                NotifyPropertyChanged();
-            }
-        }
-        [Required]
-        [TextMaxLength(14)]
-        public string First_name
-        {
-            get { return first_name; }
-            set
-            {
-                first_name = value;
-                NotifyPropertyChanged();
-            }
-        }
-        [Required]
-        [TextMaxLength(16)]
-        public string Last_name
-        {
-            get { return last_name; }
-            set
-            {
-                last_name = value;
-                NotifyPropertyChanged();
-            }
-        }
-        [Required]
-        public Gender Gender
-        {
-            get { return gender; }
-            set
-            {
-                gender = value;
-                NotifyPropertyChanged();
-            }
-        }        
-        public DateTime Hire_date
-        {
-            get { return hire_date; }
-            set
-            {
-                hire_date = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public Department Dept
-        {
-            get { return dept; }
-            set
-            {
-                dept = value;
-                NotifyPropertyChanged();
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new DbPropertyChangedEventArgs(propertyName, this));
-            }
-        }
-
-    }
-```
-
-### 3.Table class
-
-```c#
- public partial class Tables
-    {
-        (...)
-        
-        public sealed class EmployeeTable : EntityTable//Employees
-        {
-            /// <summary>
-            /// ..(CTOR)
-            /// </summary>
-            /// <param name="transaction">Transaction</param>
-            public EmployeeTable(ISqlTransaction transaction)
-                : base(transaction)
-            {
-
-            }
-            [System.Runtime.CompilerServices.IndexerName("FindBy")]
-            public Employee this[string field, object value]
-            {
-                get
-                {
-                    return base.FindBy<Employee>(field, value);
-                }
-            }
-
-            [System.Runtime.CompilerServices.IndexerName("FindBy")]
-            public Employee this[int id]
-            {
-                get
-                {
-                    return base.FindByID<Employee>(id);
-                }
-            }
-
-            public Employee GetFirst(SQLCondition condition)
-            {
-                return base.GetFirst<Employee>(condition);
-            }
-
-            public Employee GetLast(SQLCondition condition)
-            {
-                return base.GetLast<Employee>(condition);
-            }
-
-            public IEnumerable<Employee> GetLimited(SQLCondition condition, int limit)
-            {
-                return base.GetLimited<Employee>(condition, limit);
-            }
-
-            public IEnumerable<Employee> GetRows(SQLCondition condition)
-            {
-                return base.GetRows<Employee>(condition);
-            }
-
-            public void Add(Employee row)
-            {
-                base.Add<Employee>(row);
-            }
-
-            public static Type RowType
-            {
-                get
-                {
-                    return typeof(Employee);
-                }
-            }
-
-            public static EmployeeTable GetInstance(ISqlTransaction transaction)
-            {
-                if (transaction == null) return null;
-                return (EmployeeTable)transaction.Tables[typeof(EmployeeTable)];
-            }
-
-        }
-    }
-```
 
