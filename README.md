@@ -90,6 +90,10 @@ SQLprovider Context = new SQLprovider(new ProviderCredentials() {
 
 #Sample usage scenarios
 
+![singularity-xml](https://cloud.githubusercontent.com/assets/8134988/20853866/60f4f290-b8ef-11e6-8a87-3789a37d30a5.png)
+![singularity-example](https://cloud.githubusercontent.com/assets/8134988/20853865/5eeb89be-b8ef-11e6-9f5d-463763e553d5.png)
+![singularity-entity](https://cloud.githubusercontent.com/assets/8134988/20853864/5bd1add0-b8ef-11e6-8775-1ffb0e793481.png)
+
 ### 1.Database 
 ```sql
 DROP DATABASE IF EXISTS testORM;
