@@ -58,7 +58,11 @@ SQLprovider Context = new SQLprovider(new ProviderCredentials() {
                     {
                         OrderNumber = "9998/FV/2009/02",
                         OrderDate = DateTime.Now,
-                        OrderJsonData = "{\"notifyUrl\":\"http://localhost/payupages\",\"customerIp\":\"127.0.0.1\",\"merchantPosId\":\"145227\",\"description\":\"klocki DUPLO\",\"currencyCode\":\"PLN\",\"totalAmount\":\"224900\",\"extOrderId\":\"3325844a-c6d8-4196-bb84-280d4052016b\",\"validityTime\":\"186400\",\"buyer\":{\"email\":\"jan.kowalski@vp.pl\",\"phone\":\"111-222-333\",\"firstName\":\"Jan\",\"lastName\":\"Kowalski\"},\"products\":[{\"name\":\"Zestaw Lego DUPLO z elektrycznym pociągiem\",\"unitPrice\":\"24999\",\"quantity\":\"1\"},{\"name\":\"Zestaw szyn\",\"unitPrice\":\"00\",\"quantity\":\"1\"}]}"
+                        OrderJsonData = " {\"notifyUrl\":\"http://localhost/payupages\",\"customerIp\":\"127.0.0.1\",\"merchantPosId\":\"145227\",\"description\":\"klocki
+DUPLO\",\"currencyCode\":\"PLN\",\"totalAmount\":\"224900\",\"extOrderId\":\"3325844a-c6d8-4196-bb84-
+280d4052016b\",\"validityTime\":\"186400\",\"buyer\":{\"email\":\"jan.kowalski@vp.pl\",\"phone\":\"111-222-
+333\",\"firstName\":\"Jan\",\"lastName\":\"Kowalski\"},\"products\":[{\"name\":\"Zestaw Lego DUPLO z elektrycznym
+pociągiem\",\"unitPrice\":\"24999\",\"quantity\":\"1\"},{\"name\":\"Zestaw szyn\",\"unitPrice\":\"00\",\"quantity\":\"1\"}]}"
                     };
                     repo.Orders.Add(order);
                     trans.Commit();
@@ -91,15 +95,15 @@ SQLprovider Context = new SQLprovider(new ProviderCredentials() {
 
 #Sample usage scenarios
 
-Example of XML schema file contained entity structure description
+#####Example of XML schema file contained entity structure description
 
 ![singularity-xml](https://cloud.githubusercontent.com/assets/8134988/20853866/60f4f290-b8ef-11e6-8a87-3789a37d30a5.png)
 
-Example of Code generated entity schema class
+#####Example of Code generated entity schema class
 
 ![singularity-entity](https://cloud.githubusercontent.com/assets/8134988/20853864/5bd1add0-b8ef-11e6-8775-1ffb0e793481.png)
 
-Example of use
+#####Example of use
 
 ![singularity-example](https://cloud.githubusercontent.com/assets/8134988/20853865/5eeb89be-b8ef-11e6-9f5d-463763e553d5.png)
 
