@@ -3,7 +3,7 @@ Micro ORM for .NET
 
 Singularity ORM is a tiny and simply to use, object relational mapping framework for .NET environment, tailored to be used especially in projects responsible for exchange data with open source systems without their own API.
 
-It's an entirely new approach towards micro ORM idea and due to that, might be completely separate from SQL queries, which are often required in the others similar projects.
+It's an entirely new approach towards micro ORM idea and due to that, it might be completely separate from SQL databse layer, which are often required in the others similar projects (including ordinary SQL queries on input). Primary goal which might be achieve using this parcticular ORM is create a base for custom business logic and data exchange. Singularity ORM was designed using primary OOP patterns like „Unity of work”, „Observer” etc., and due to that it provides set of sophisticated  tools, tailored to build a custom data models. Data models are auto-generated using XML documents describing particular entities and relations between them. 
 
 Singularity.ORM is currently in the testing phase, and no giving any warranty.
 
