@@ -103,8 +103,16 @@ pociągiem\",\"unitPrice\":\"24999\",\"quantity\":\"1\"},{\"name\":\"Zestaw szyn
 
 ![singularity-entity](https://cloud.githubusercontent.com/assets/8134988/20853864/5bd1add0-b8ef-11e6-8775-1ffb0e793481.png)
 
+![singularity-entity-2](https://cloud.githubusercontent.com/assets/8134988/20859336/6c7fe080-b95c-11e6-8324-e4a9c694baa1.png)
+
+![singularity-entity-ext](https://cloud.githubusercontent.com/assets/8134988/20859338/704382f8-b95c-11e6-9cdc-4aa8a0983fba.png)
+
 #####Example of use
 
 ![singularity-example](https://cloud.githubusercontent.com/assets/8134988/20853865/5eeb89be-b8ef-11e6-9f5d-463763e553d5.png)
+
+![singularity-example-1](https://cloud.githubusercontent.com/assets/8134988/20859339/7acb8e1e-b95c-11e6-8b20-1ba4715d8c4f.png)
+
+![singularity-sql](https://cloud.githubusercontent.com/assets/8134988/20859340/7f2528d0-b95c-11e6-9cf0-653591ccd065.png)
 
 
