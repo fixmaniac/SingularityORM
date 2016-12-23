@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Devart.Data.MySql;
 using Devart.Common;
+using System.Globalization;
+using System.Threading;
 using Singularity.ORM.Enum;
 using Singularity.ORM.Events;
 
@@ -61,6 +63,10 @@ namespace Singularity.ORM.SQL
         {
             this.Transaction = this.Connection.BeginTransaction(isolationLevel);
             this.Isolationlevel = isolationLevel;
+
+            CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+            customCulture.NumberFormat.NumberDecimalSeparator = ".";
+            Thread.CurrentThread.CurrentCulture = customCulture;
         }
 
         /// <summary>

@@ -386,9 +386,9 @@ namespace Singularity.ORM
             Map.Add(typeof(System.Int32), "INT");
             Map.Add(typeof(System.Int64), "BIGINT");  
             Map.Add(typeof(System.Guid), "CHAR(36)");
-            Map.Add(typeof(System.Double), "DOUBLE");
+            Map.Add(typeof(System.Double), "DOUBLE(18,2)");
             Map.Add(typeof(System.TimeSpan), "TIME");
-            Map.Add(typeof(System.Decimal), "DECIMAL");
+            Map.Add(typeof(System.Decimal), "DECIMAL(18,2)");
             Map.Add(typeof(System.DateTime), "DATETIME");
             
         }       
@@ -403,7 +403,7 @@ namespace Singularity.ORM
             {
                 switch (reason)
                 {
-                    case ConvertionReasonType.TableNotExists: CreateTable(TableName);
+                    case ConvertionReasonType.TableNotExists: CreateTable(TableName.ToLower());
                         break;
                 }
             }            
@@ -554,8 +554,9 @@ namespace Singularity.ORM
             reason = null;
             if (SQLGenerator.IsTableExist(source.Transaction, source.TableName))
             {
+                string tableName = source.TableName.ToLower();
                 string[] entityFieldsNames  = SQLprovider.getFieldsNames(source.Table.RowType);
-                string[] sqltableFieldNames = SQLGenerator.GetColumnsInfo(source.Transaction, source.TableName);
+                string[] sqltableFieldNames = SQLGenerator.GetColumnsInfo(source.Transaction, tableName);
                 if (Enumerable.SequenceEqual(entityFieldsNames, sqltableFieldNames)) {
                      return false;
                 }

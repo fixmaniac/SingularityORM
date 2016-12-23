@@ -27,7 +27,7 @@ using Singularity.ORM.SQL;
 namespace Singularity.ORM
 {
     #region interfaces
-    public interface IBaseRecord
+    public interface IBaseRecord 
     {
         int Id { get; set; }
     }

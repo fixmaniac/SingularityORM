@@ -29,7 +29,7 @@ namespace Singularity.ORM
     /// 
     /// </summary>
     [TypeDescriptionProvider(typeof(BusinessTypeDescriptionProvider))]
-    public abstract class EntityProvider
+    public abstract class EntityProvider : IComparable
     {
         /// <summary>
         /// 
@@ -143,6 +143,11 @@ namespace Singularity.ORM
                     && this.Transaction == ((EntityProvider)v).Transaction;
             }
             return this.GetHashCode() == v.GetHashCode();
+        }
+
+        int IComparable.CompareTo(object obj)
+        {
+            return ((IBaseRecord)this).Id.CompareTo(((IBaseRecord)obj).Id);
         }
 
         //public override int GetHashCode()
