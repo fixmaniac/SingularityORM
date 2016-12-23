@@ -268,7 +268,7 @@ namespace Singularity.ORM
         /// <returns></returns>
         public static bool IsTableExist(ISqlTransaction transaction, string name)
         {
-            var dataReader = QueryReader(transaction, String.Format("{0} '{1}'", showTables, name));
+            var dataReader = QueryReader(transaction, String.Format("{0} '{1}'", showTables, name.ToLower()));
             if (dataReader != null)
             {
                 object result = null;
@@ -626,13 +626,13 @@ namespace Singularity.ORM
                 switch (key.Type)
                 {
                     case KeyType.ForeignKey: {
-                       var cmd = String.Format("ALTER TABLE {0} ADD FOREIGN KEY ({1}) REFERENCES {2} (id) \r\n", TableName,key.Name,
-                                this.RowType.GetForeignKeyTableName(key.Name));
+                       var cmd = String.Format("ALTER TABLE {0} ADD FOREIGN KEY ({1}) REFERENCES {2} (id) \r\n", TableName,key.Name.ToLower(),
+                                this.RowType.GetForeignKeyTableName(key.Name).ToLower());
                         ExecSQL(cmd, transaction);
                         break;
                     }
                     case KeyType.IndexerKey: {
-                        var cmd = String.Format("ALTER TABLE {0} ADD INDEX ({1})\r\n", TableName,String.Join(",", key.Fields));
+                        var cmd = String.Format("ALTER TABLE {0} ADD INDEX ({1})\r\n", TableName.ToLower(),String.Join(",", key.Fields));
                         ExecSQL(cmd, transaction);
                         break;
                     }
