@@ -205,6 +205,13 @@ namespace Singularity.ORM.SQL
             string   table  = SQLprovider.getTableName(bus.Type);
             string[] fields = SQLprovider.getPropertiesNames(bus.Type);
             object[] values = SQLprovider.getValues(bus.Row, fields).ToArray();
+
+            /// Bug during modifying one entity object and very next 
+            ///  mark it as a reference in the other entity
+            //if (bus.Row.Id == 0)
+            //    return;
+            ///
+
             string result = "";
             switch (state)
             {
@@ -247,8 +254,11 @@ namespace Singularity.ORM.SQL
                 }
                 this.Provider.OnQuery(new ProviderQueryEventArgs(this.Provider, cmd.CommandText));
                 cmd.ExecuteNonQuery();
-                this.LastInsertedId = GetLastInsertedId();
-                rec.Id = this.LastInsertedId;
+                if (businessObj.State == FieldState.Added)
+                {
+                    this.LastInsertedId = GetLastInsertedId();
+                    rec.Id = this.LastInsertedId;
+                }
                 businessObj.Commited = true;
             });
             this.Transaction.Commit();

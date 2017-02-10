@@ -432,7 +432,9 @@ namespace Singularity.ORM.SQL
         internal static string getTableName(Type type)
         {
             FieldInfo fi = type.GetField
-                ("tableName", BindingFlags.NonPublic | BindingFlags.Static);
+                ("tableName", BindingFlags.NonPublic | 
+                              BindingFlags.Static | 
+                              BindingFlags.FlattenHierarchy );
             return ((string)fi.GetValue(null)).ToLower();
         }
 
@@ -468,6 +470,8 @@ namespace Singularity.ORM.SQL
             }
         }
 
+        /// BindingFlags.DeclaredOnly | removed from getPropertiesNames Method
+
         /// <summary>
         /// 
         /// </summary>
@@ -476,7 +480,9 @@ namespace Singularity.ORM.SQL
         internal static string[] getPropertiesNames(Type type)
         {
             PropertyInfo[] props = type.GetProperties
-                   (BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                   (BindingFlags.Public | 
+                    BindingFlags.Instance | 
+                    BindingFlags.FlattenHierarchy );
 
             List<string> arr = new List<string>();
             foreach (PropertyInfo pi in props)
