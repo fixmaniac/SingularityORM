@@ -390,6 +390,7 @@ namespace Singularity.ORM
             Map.Add(typeof(System.TimeSpan), "TIME");
             Map.Add(typeof(System.Decimal), "DECIMAL(18,2)");
             Map.Add(typeof(System.DateTime), "DATETIME");
+            Map.Add(typeof(System.String), "TEXT");
             
         }       
 
@@ -443,7 +444,7 @@ namespace Singularity.ORM
                                 ColumnType = String.Format("ENUM({0})", values.JoinFormat(",", "'{0}'"))
                             };
                     }
-                    else if (fieldType == typeof(String)) {
+                    else if (fieldType == typeof(string)) {
                             /// if string
                             column = new SQLTableColumn(fieldName)
                             {
