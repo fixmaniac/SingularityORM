@@ -390,7 +390,7 @@ namespace Singularity.ORM
             Map.Add(typeof(System.TimeSpan), "TIME");
             Map.Add(typeof(System.Decimal), "DECIMAL(18,2)");
             Map.Add(typeof(System.DateTime), "DATETIME");
-            Map.Add(typeof(System.String), "TEXT");
+            ///Map.Add(typeof(System.String), "TEXT");
             
         }       
 
@@ -446,10 +446,11 @@ namespace Singularity.ORM
                     }
                     else if (fieldType == typeof(string)) {
                             /// if string
+                            var length = this.Table.RowType.GetStringMaxLength(fieldName);
                             column = new SQLTableColumn(fieldName)
-                            {
+                            {  
                                 ColumnType = String.Format
-                                ("VARCHAR({0})", this.Table.RowType.GetStringMaxLength(fieldName))
+                                (length == 65535 ? "TEXT" : "VARCHAR({0})", length)
                             };
                     }
                     else if (typeof(IBaseRecord).IsAssignableFrom(fieldType))  {
