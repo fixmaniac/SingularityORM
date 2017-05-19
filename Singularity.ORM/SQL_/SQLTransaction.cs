@@ -66,6 +66,8 @@ namespace Singularity.ORM.SQL
 
             CultureInfo customCulture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
+            customCulture.DateTimeFormat.DateSeparator = "-";
+			customCulture.DateTimeFormat.ShortDatePattern = "yyyy-MM-dd";
             Thread.CurrentThread.CurrentCulture = customCulture;
         }
 
