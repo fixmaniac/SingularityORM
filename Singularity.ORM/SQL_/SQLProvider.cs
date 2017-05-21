@@ -403,7 +403,8 @@ namespace Singularity.ORM.SQL
                 List<Type> arr = new List<Type>();
                 foreach (FieldInfo prp in props)
                 {
-                    if (!prp.Name.Equals("PropertyChanged"))
+                    if (!prp.Name.Equals("PropertyChanged") && 
+                        !prp.Name.Contains("BackingField"))
                         arr.Add(prp.FieldType);
                 }
                 return arr;
@@ -413,8 +414,9 @@ namespace Singularity.ORM.SQL
                 Dictionary<string, Type> dict = new Dictionary<string, Type>();
                 foreach (FieldInfo prp in props)
                 {
-                    if (!prp.Name.Equals("PropertyChanged")
-                        && !dict.ContainsKey(prp.Name))
+                    if (!prp.Name.Equals("PropertyChanged") &&
+                        !prp.Name.Contains("BackingField") &&
+                        !dict.ContainsKey(prp.Name))
                     {
                         dict.Add(prp.Name, prp.FieldType);
                     }
